@@ -6,7 +6,7 @@ Sistema de preonboarding: los administradores crean formularios, las personas lo
 
 | Pieza | Tecnología | Carpeta |
 |---|---|---|
-| API | Go (chi, pgx, goose) | `api/` |
+| API | Go (chi, pgx, goose) | `api/` (submódulo de [formsis-backend](https://github.com/gabrielventodev/formsis-backend)) |
 | Base de datos | PostgreSQL 17 nativo | migraciones en `api/migrations/` |
 | Frontend | Next.js + TypeScript + Tailwind | `web/` |
 | Archivos | Almacenamiento compatible con S3 (MinIO en local) | — |
@@ -14,6 +14,18 @@ Sistema de preonboarding: los administradores crean formularios, las personas lo
 La API aplica las migraciones al arrancar. Postgres es la única base de datos: esquemas de formularios y respuestas viven en columnas JSONB, y los estados, comentarios y auditoría en tablas relacionales.
 
 ## Empezar
+
+La API vive en su propio repositorio, [formsis-backend](https://github.com/gabrielventodev/formsis-backend), y aquí entra como submódulo en `api/`. Clona con los submódulos:
+
+```sh
+git clone --recurse-submodules https://github.com/gabrielventodev/formflow-v2.git
+```
+
+Si ya lo tenías clonado, trae la carpeta `api/` con:
+
+```sh
+git submodule update --init
+```
 
 Todo con Docker:
 
@@ -39,6 +51,20 @@ Requisitos: Go 1.26+, Node 22+, Docker.
 ### Desde VS Code
 
 En **Run and Debug** elige **FormFlow: API + Web** y pulsa F5. Levanta Postgres con Docker, arranca la API en Go con el depurador (breakpoints incluidos) y Next.js en modo desarrollo, y abre el navegador al estar lista. También puedes lanzar **API (Go)** o **Web (Next.js)** por separado. Necesitas la extensión de Go (`golang.go`) con Delve; VS Code la sugiere al abrir el repo. Si la API no arranca, actualiza Go a 1.26 y ejecuta **Go: Install/Update Tools** para que Delve quede compilado con esa versión.
+
+### Trabajar en la API (submódulo)
+
+Los cambios del backend se hacen y se suben dentro de `api/`, que es un checkout de formsis-backend:
+
+```sh
+cd api
+git switch main
+git commit -am "..." && git push
+cd ..
+git add api && git commit -m "Actualiza la API"   # fija en formflow-v2 la nueva versión de la API
+```
+
+Para traer lo último de formsis-backend: `git submodule update --remote api` y luego `git add api` y commit. Al hacer `git pull` en formflow-v2, corre `git submodule update` para que `api/` quede en la versión fijada (o configura una vez `git config submodule.recurse true` y se hace solo).
 
 ## Constructor de formularios
 
