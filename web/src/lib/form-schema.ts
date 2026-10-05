@@ -193,6 +193,8 @@ export function isValidRut(raw: string): boolean {
 
 /** Validates one answer and returns an error message, or null. */
 export function validateAnswer(f: Field, v: unknown): string | null {
+  // A repeater with a minimum needs that many rows even when it isn't marked required.
+  if (f.type === "repeater" && f.min && (!Array.isArray(v) || v.length < f.min)) return `Agrega al menos ${f.min}`;
   if (isEmpty(v)) return f.required ? "Este campo es obligatorio" : null;
   switch (f.type) {
     case "text":
