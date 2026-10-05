@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { apiGet } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,9 @@ export default async function Home() {
         <span className={`h-2.5 w-2.5 rounded-full ${ok ? "bg-emerald-500" : "bg-red-500"}`} />
         {ok ? "API y base de datos conectadas" : "No se pudo conectar con la API"}
       </div>
+      <Link href="/admin/forms" className="w-fit rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700">
+        Ir a formularios
+      </Link>
     </main>
   );
 }
