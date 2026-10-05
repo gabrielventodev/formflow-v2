@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button, Checkbox, Input, Select, Textarea } from "@/components/ui";
 import { evaluate, validateAnswer, type Answers, type Field, type FormSchema } from "@/lib/form-schema";
 import { cn } from "@/lib/utils";
@@ -120,13 +120,20 @@ export function FormRenderer({
   );
 }
 
-function FieldInput({
+/**
+ * One field of the form. The filling portal passes `renderFile` to plug in real uploads and
+ * `disabled` to lock fields a reviewer did not flag.
+ */
+export function FieldInput({
   field: f,
   value,
   onChange,
   error,
   errors,
   errorPrefix,
+  disabled,
+  renderFile,
+  note,
 }: {
   field: Field;
   value: unknown;
@@ -134,17 +141,20 @@ function FieldInput({
   error?: string;
   errors: Record<string, string>;
   errorPrefix: string;
+  disabled?: boolean;
+  renderFile?: (field: Field, path: string) => ReactNode;
+  note?: ReactNode;
 }) {
   const id = `f-${errorPrefix}`;
   const str = typeof value === "string" || typeof value === "number" ? String(value) : "";
   let input;
   switch (f.type) {
     case "textarea":
-      input = <Textarea id={id} value={str} placeholder={f.placeholder} onChange={(e) => onChange(e.target.value)} />;
+      input = <Textarea id={id} value={str} placeholder={f.placeholder} disabled={disabled} onChange={(e) => onChange(e.target.value)} />;
       break;
     case "select":
       input = (
-        <Select id={id} value={str} onChange={(e) => onChange(e.target.value)}>
+        <Select id={id} value={str} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
           <option value="">Selecciona…</option>
           {f.options?.map((o) => (
             <option key={o}>{o}</option>
@@ -161,6 +171,7 @@ function FieldInput({
               key={o}
               label={o}
               checked={arr.includes(o)}
+              disabled={disabled}
               onChange={(e) => onChange(e.target.checked ? [...arr, o] : arr.filter((x) => x !== o))}
             />
           ))}
@@ -171,13 +182,21 @@ function FieldInput({
     case "checkbox":
       return (
         <div>
-          <Checkbox label={f.label + (f.required ? " *" : "")} checked={value === true} onChange={(e) => onChange(e.target.checked)} />
+          <Checkbox
+            label={f.label + (f.required ? " *" : "")}
+            checked={value === true}
+            disabled={disabled}
+            onChange={(e) => onChange(e.target.checked)}
+          />
           {f.help && <p className="mt-1 text-xs text-zinc-500">{f.help}</p>}
+          {note}
           {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
         </div>
       );
     case "file":
-      input = (
+      input = renderFile ? (
+        renderFile(f, errorPrefix)
+      ) : (
         <div>
           <input
             id={id}
@@ -200,7 +219,12 @@ function FieldInput({
                 <span>
                   {f.label} {i + 1}
                 </span>
-                <Button size="sm" variant="danger" onClick={() => onChange(rows.filter((_, j) => j !== i))}>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  disabled={disabled}
+                  onClick={() => onChange(rows.filter((_, j) => j !== i))}
+                >
                   Quitar
                 </Button>
               </div>
@@ -214,12 +238,18 @@ function FieldInput({
                     error={errors[`${errorPrefix}.${i}.${sf.key}`]}
                     errors={errors}
                     errorPrefix={`${errorPrefix}.${i}.${sf.key}`}
+                    disabled={disabled}
+                    renderFile={renderFile}
                   />
                 ))}
               </div>
             </div>
           ))}
-          <Button size="sm" onClick={() => onChange([...rows, {}])} disabled={f.max !== undefined && rows.length >= f.max}>
+          <Button
+            size="sm"
+            onClick={() => onChange([...rows, {}])}
+            disabled={disabled || (f.max !== undefined && rows.length >= f.max)}
+          >
             + Agregar
           </Button>
         </div>
@@ -236,6 +266,7 @@ function FieldInput({
           placeholder={f.placeholder ?? (f.type === "id" && f.idKind === "rut" ? "12.345.678-5" : undefined)}
           min={f.type === "number" ? f.min : undefined}
           max={f.type === "number" ? f.max : undefined}
+          disabled={disabled}
           onChange={(e) => onChange(e.target.value)}
         />
       );
@@ -249,6 +280,7 @@ function FieldInput({
       </label>
       {input}
       {f.help && <p className="mt-1 text-xs text-zinc-500">{f.help}</p>}
+      {note}
       {error && <p className={cn("mt-1 text-xs text-red-600")}>{error}</p>}
     </div>
   );

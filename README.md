@@ -56,6 +56,35 @@ API (`/api/v1/admin/forms`): `GET /`, `POST /`, `GET|PATCH|DELETE /{id}`, `POST 
 
 > Estas rutas todavía no piden sesión: la autenticación de administradores llega con el panel administrativo.
 
+## Portal de llenado
+
+Los solicitantes completan un formulario publicado sin crear cuenta.
+
+1. En **Formularios → Compartir** (`/admin/forms/{id}/enlaces`) se crea un enlace público o se invita a alguien por email (con mensaje y fecha de vencimiento opcionales).
+2. El enlace abre `/f/{token}`: la persona deja su nombre y email y recibe un **enlace privado** `/s/{token}` para continuar cuando quiera. Solo se guarda el hash del token.
+3. El formulario va paso a paso, con barra de progreso, condiciones, validación por paso (las mismas reglas que valida la API al enviar) y guardado automático.
+4. Los documentos se suben con arrastrar y soltar, con progreso y vista previa; se validan tipo y tamaño en el navegador y en la API. Siempre se descargan a través de la API, nunca con acceso directo al bucket.
+5. Antes de enviar hay una pantalla de revisión. Al enviar llega un email de acuse.
+6. Si un revisor pide correcciones (`changes_requested` con comentarios por campo), el solicitante ve los comentarios y solo puede editar los campos observados; al reenviar, los comentarios quedan resueltos y la solicitud vuelve a `submitted`.
+7. En `/retomar` se pide un enlace nuevo con el email (invalida los anteriores).
+
+Para probarlo en local: `make db && make seed`, luego abre http://localhost:3000/f/demo-kyb.
+
+Configuración (variables de la API):
+
+| Variable | Para qué | Por defecto |
+|---|---|---|
+| `STORAGE_DRIVER` | `local` (carpeta) o `s3` (MinIO, R2, S3) | `local` |
+| `STORAGE_DIR` | Carpeta del driver local | `data/uploads` |
+| `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_REGION`, `S3_USE_SSL` | Bucket compatible con S3; se crea si no existe | `localhost:9000`, `formflow` |
+| `MAX_UPLOAD_MB` | Tope por archivo, aunque el campo permita más | `25` |
+| `WEB_PUBLIC_URL` | URL pública de la web para los enlaces de los emails | `WEB_ORIGIN` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM` | Envío de emails. Sin `SMTP_HOST`, los emails se escriben en el log de la API (útil para copiar el enlace en desarrollo) | — |
+
+Con `make up`, la API usa el MinIO del compose.
+
+API pública (`/api/v1/portal`): `GET /links/{token}`, `POST /links/{token}/start`, `POST /resume`; y con `Authorization: Bearer {token}`: `GET /submission`, `PUT /submission/data`, `POST /submission/validate`, `POST /submission/submit`, `POST /submission/files`, `GET|DELETE /submission/files/{id}`. Enlaces (admin): `GET /api/v1/admin/links?formId=`, `POST /api/v1/admin/links`, `DELETE /api/v1/admin/links/{id}`.
+
 ## Pruebas
 
 ```sh

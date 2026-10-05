@@ -1,4 +1,4 @@
-.PHONY: up down db api web test
+.PHONY: up down db api web seed test
 
 up:            ## Levanta todo con Docker
 	docker compose up --build
@@ -11,6 +11,9 @@ db:            ## Solo Postgres, para desarrollo local
 
 api:           ## API en Go contra la base local
 	cd api && go run ./cmd/api
+
+seed:          ## Formulario KYB de prueba con enlace público /f/demo-kyb
+	cd api && go run ./cmd/seed
 
 web:           ## Frontend en modo desarrollo
 	cd web && npm run dev
