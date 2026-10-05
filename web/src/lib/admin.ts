@@ -136,4 +136,10 @@ export const ACTION_LABEL: Record<string, string> = {
   commented: "Comentó",
   comment_resolved: "Marcó un comentario como resuelto",
   assigned: "Cambió el revisor",
+  // Portal-side actions (actor_type applicant)
+  "submission.created": "Empezó a llenar el formulario",
+  "submission.submitted": "Envió el formulario",
+  "submission.resubmitted": "Reenvió con correcciones",
+  "file.uploaded": "Subió un documento",
+  "file.deleted": "Eliminó un documento",
 };
