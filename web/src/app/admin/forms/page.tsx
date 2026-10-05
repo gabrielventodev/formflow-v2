@@ -122,6 +122,14 @@ export default function FormsPage() {
                 </div>
               </div>
               <div className="flex gap-1">
+                {f.status === "published" && (
+                  <Link
+                    href={`/admin/forms/${f.id}/enlaces`}
+                    className="inline-flex h-8 items-center rounded-md px-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+                  >
+                    Compartir
+                  </Link>
+                )}
                 <Button size="sm" variant="ghost" onClick={() => act(() => apiPost(`${formsPath}/${f.id}/duplicate`))}>
                   Duplicar
                 </Button>

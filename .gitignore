@@ -1,3 +1,4 @@
 .env
 *.log
 /api/bin/
+/api/data/
