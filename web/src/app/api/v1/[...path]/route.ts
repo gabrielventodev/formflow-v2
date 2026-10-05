@@ -1,7 +1,7 @@
 // Same-origin proxy to the Go API so the session cookie is first-party for the browser.
 const API_URL = process.env.API_URL ?? "http://localhost:8080";
 
-const FORWARD_REQUEST = ["cookie", "content-type", "accept", "user-agent"];
+const FORWARD_REQUEST = ["cookie", "authorization", "content-type", "accept", "user-agent"];
 const FORWARD_RESPONSE = ["content-type", "content-disposition", "set-cookie", "cache-control", "content-security-policy", "x-content-type-options"];
 
 async function proxy(request: Request, ctx: RouteContext<"/api/v1/[...path]">) {
