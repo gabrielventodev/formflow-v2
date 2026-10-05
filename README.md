@@ -34,11 +34,11 @@ make api    # API en :8080
 make web    # Next.js en :3000
 ```
 
-Requisitos: Go 1.24+, Node 22+, Docker.
+Requisitos: Go 1.26+, Node 22+, Docker.
 
 ### Desde VS Code
 
-En **Run and Debug** elige **FormFlow: API + Web** y pulsa F5. Levanta Postgres con Docker, arranca la API en Go con el depurador (breakpoints incluidos) y Next.js en modo desarrollo, y abre el navegador al estar lista. También puedes lanzar **API (Go)** o **Web (Next.js)** por separado. Necesitas la extensión de Go (`golang.go`) con Delve; VS Code la sugiere al abrir el repo.
+En **Run and Debug** elige **FormFlow: API + Web** y pulsa F5. Levanta Postgres con Docker, arranca la API en Go con el depurador (breakpoints incluidos) y Next.js en modo desarrollo, y abre el navegador al estar lista. También puedes lanzar **API (Go)** o **Web (Next.js)** por separado. Necesitas la extensión de Go (`golang.go`) con Delve; VS Code la sugiere al abrir el repo. Si la API no arranca, actualiza Go a 1.26 y ejecuta **Go: Install/Update Tools** para que Delve quede compilado con esa versión.
 
 ## Modelo de datos
 
