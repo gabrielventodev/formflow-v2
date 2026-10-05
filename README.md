@@ -34,11 +34,77 @@ make api    # API en :8080
 make web    # Next.js en :3000
 ```
 
-Requisitos: Go 1.24+, Node 22+, Docker.
+Requisitos: Go 1.26+, Node 22+, Docker.
 
 ### Desde VS Code
 
-En **Run and Debug** elige **FormFlow: API + Web** y pulsa F5. Levanta Postgres con Docker, arranca la API en Go con el depurador (breakpoints incluidos) y Next.js en modo desarrollo, y abre el navegador al estar lista. También puedes lanzar **API (Go)** o **Web (Next.js)** por separado. Necesitas la extensión de Go (`golang.go`) con Delve; VS Code la sugiere al abrir el repo.
+En **Run and Debug** elige **FormFlow: API + Web** y pulsa F5. Levanta Postgres con Docker, arranca la API en Go con el depurador (breakpoints incluidos) y Next.js en modo desarrollo, y abre el navegador al estar lista. También puedes lanzar **API (Go)** o **Web (Next.js)** por separado. Necesitas la extensión de Go (`golang.go`) con Delve; VS Code la sugiere al abrir el repo. Si la API no arranca, actualiza Go a 1.26 y ejecuta **Go: Install/Update Tools** para que Delve quede compilado con esa versión.
+
+## Constructor de formularios
+
+En http://localhost:3000/admin/forms se crean, editan, duplican y archivan formularios.
+
+- Cada sección es un paso del formulario. Los campos se agregan desde el panel izquierdo y se reordenan arrastrando (también entre secciones).
+- Tipos de campo: texto corto y largo, email, teléfono, número, fecha, selección única y múltiple, casilla, archivo, RUT/DNI con validación y grupo repetible (p. ej. socios).
+- Por campo: etiqueta, ayuda, obligatorio, mínimo/máximo, expresión regular, tipos y tamaño de archivo, y una condición para mostrarlo según otro campo anterior.
+- Los cambios se guardan solos en un borrador. **Publicar** congela una versión inmutable (v1, v2…); los envíos quedan atados a la versión con la que se llenaron. Editar un formulario publicado solo cambia el borrador hasta volver a publicar.
+- La pestaña **Vista previa** muestra el formulario como lo verá el solicitante, con condiciones y validaciones.
+
+El esquema está definido en `api/internal/schema` (Go, valida al publicar) y en `web/src/lib/form-schema.ts` (TypeScript).
+
+API (`/api/v1/admin/forms`): `GET /`, `POST /`, `GET|PATCH|DELETE /{id}`, `POST /{id}/publish`, `POST /{id}/duplicate`, `POST /{id}/archive`, `POST /{id}/restore`, `GET /{id}/validate`, `GET /{id}/versions`, `GET /{id}/versions/{n}`.
+
+Todas las rutas `/api/v1/admin/*` exigen sesión de administrador (ver abajo).
+
+## Panel administrativo
+
+Entra en http://localhost:3000/admin con la cuenta inicial: `ADMIN_EMAIL` / `ADMIN_PASSWORD` (por defecto `admin@formflow.local` / `cambiame123`; la API la crea al arrancar si no existe). Para ver el panel con datos sin pasar por el portal: `make seed-envios`.
+
+- **Bandeja de envíos** con pestañas (por revisar, asignados a mí, observados, aprobados, rechazados, todos), búsqueda por nombre, email o ID, filtros por formulario, revisor y fechas, y exportación a CSV con los mismos filtros (una columna por campo al filtrar por un formulario).
+- **Detalle** con las respuestas mostradas según la versión del formulario con que se llenaron, documentos para ver o descargar, comentarios generales y por campo, e historial de auditoría.
+- **Estados**: tomar para revisión, pedir correcciones (con observaciones por campo), aprobar o rechazar (con motivo). Owners y admins pueden reabrir una decisión. Tomar un envío lo asigna a quien lo toma si no tenía revisor.
+- **Sesiones** propias en Go: contraseñas con argon2id, sesión en Postgres y cookie httpOnly. El navegador habla con la API a través de `/api/v1` en el mismo dominio de Next.js, así la cookie es de primera parte. Activa `COOKIE_SECURE=true` detrás de HTTPS.
+
+API (`/api/v1`): `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`; y en `/admin/submissions`: `GET /`, `GET /facets`, `GET /export.csv`, `GET /{id}`, `POST /{id}/transition`, `POST /{id}/comments`, `POST /{id}/comments/{commentId}/resolve`, `PUT /{id}/assignee`, `GET /{id}/files/{fileId}`.
+
+Los documentos se leen del mismo almacenamiento que usa el portal (`STORAGE_DRIVER`: disco local o MinIO/S3). Las rutas de enlaces del portal (`/api/v1/admin/links`) también exigen sesión.
+
+## Portal de llenado
+
+Los solicitantes completan un formulario publicado sin crear cuenta.
+
+1. En **Formularios → Compartir** (`/admin/forms/{id}/enlaces`) se crea un enlace público o se invita a alguien por email (con mensaje y fecha de vencimiento opcionales).
+2. El enlace abre `/f/{token}`: la persona deja su nombre y email y recibe un **enlace privado** `/s/{token}` para continuar cuando quiera. Solo se guarda el hash del token.
+3. El formulario va paso a paso, con barra de progreso, condiciones, validación por paso (las mismas reglas que valida la API al enviar) y guardado automático.
+4. Los documentos se suben con arrastrar y soltar, con progreso y vista previa; se validan tipo y tamaño en el navegador y en la API. Siempre se descargan a través de la API, nunca con acceso directo al bucket.
+5. Antes de enviar hay una pantalla de revisión. Al enviar llega un email de acuse.
+6. Si un revisor pide correcciones (`changes_requested` con comentarios por campo), el solicitante ve los comentarios y solo puede editar los campos observados; al reenviar, los comentarios quedan resueltos y la solicitud vuelve a `submitted`.
+7. En `/retomar` se pide un enlace nuevo con el email (invalida los anteriores).
+
+Para probarlo en local: `make db && make seed`, luego abre http://localhost:3000/f/demo-kyb.
+
+Configuración (variables de la API):
+
+| Variable | Para qué | Por defecto |
+|---|---|---|
+| `STORAGE_DRIVER` | `local` (carpeta) o `s3` (MinIO, R2, S3) | `local` |
+| `STORAGE_DIR` | Carpeta del driver local | `data/uploads` |
+| `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_REGION`, `S3_USE_SSL` | Bucket compatible con S3; se crea si no existe | `localhost:9000`, `formflow` |
+| `MAX_UPLOAD_MB` | Tope por archivo, aunque el campo permita más | `25` |
+| `WEB_PUBLIC_URL` | URL pública de la web para los enlaces de los emails | `WEB_ORIGIN` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM` | Envío de emails. Sin `SMTP_HOST`, los emails se escriben en el log de la API (útil para copiar el enlace en desarrollo) | — |
+
+Con `make up`, la API usa el MinIO del compose.
+
+API pública (`/api/v1/portal`): `GET /links/{token}`, `POST /links/{token}/start`, `POST /resume`; y con `Authorization: Bearer {token}`: `GET /submission`, `PUT /submission/data`, `POST /submission/validate`, `POST /submission/submit`, `POST /submission/files`, `GET|DELETE /submission/files/{id}`. Enlaces (admin): `GET /api/v1/admin/links?formId=`, `POST /api/v1/admin/links`, `DELETE /api/v1/admin/links/{id}`.
+
+## Pruebas
+
+```sh
+make test
+# con Postgres local, también las pruebas de la API contra la base (no borran datos):
+TEST_DATABASE_URL=postgres://formflow:formflow@localhost:5432/formflow?sslmode=disable make test
+```
 
 ## Modelo de datos
 

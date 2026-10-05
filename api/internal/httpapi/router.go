@@ -6,14 +6,22 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gabrielventodev/formflow/api/internal/mailer"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Server struct {
-	DB        *pgxpool.Pool
-	WebOrigin string
+	DB           *pgxpool.Pool
+	WebOrigin    string
+	OrgID        string // the single organization the MVP serves
+	CookieSecure bool
+	Files        FileOpener    // reads submission_files.storage_key for the review panel
+	Portal       http.Handler  // public applicant API, mounted at /api/v1/portal
+	Links        http.Handler  // form links and invitations, mounted at /api/v1/admin/links
+	Mail         mailer.Mailer // notifies applicants of review decisions (nil = no emails)
+	WebURL       string        // public web URL used in applicant links
 }
 
 func (s *Server) Routes() http.Handler {
@@ -25,6 +33,22 @@ func (s *Server) Routes() http.Handler {
 	r.Get("/healthz", s.health)
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Get("/health", s.health)
+		if s.Portal != nil {
+			r.Mount("/portal", s.Portal)
+		}
+
+		r.Post("/auth/login", s.login)
+		r.Post("/auth/logout", s.logout)
+		r.With(s.requireUser).Get("/auth/me", s.me)
+
+		r.Route("/admin", func(r chi.Router) {
+			r.Use(s.requireUser)
+			r.Route("/forms", s.formRoutes)
+			if s.Links != nil {
+				r.Mount("/links", s.Links)
+			}
+			s.adminRoutes(r)
+		})
 	})
 	return r
 }
@@ -43,7 +67,7 @@ func (s *Server) cors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", s.WebOrigin)
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
@@ -54,7 +78,7 @@ func (s *Server) cors(next http.Handler) http.Handler {
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type, Authorization", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(v)
 }
