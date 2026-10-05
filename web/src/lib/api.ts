@@ -1,7 +1,9 @@
 import type { FormSchema, Problem } from "./form-schema";
 
-// Server-side calls go straight to the Go API inside the network; the browser uses the public URL.
-const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+// Server-side calls go straight to the Go API inside the network. The browser goes through the
+// same-origin proxy (app/api/v1) so the admin session cookie is first-party.
+const API_URL =
+  typeof window === "undefined" ? (process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080") : "";
 
 export class ApiError extends Error {
   constructor(
@@ -21,6 +23,9 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     headers: body === undefined ? undefined : { "Content-Type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
+  if (res.status === 401 && typeof window !== "undefined" && !window.location.pathname.startsWith("/admin/login")) {
+    window.location.replace(`/admin/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+  }
   if (res.status === 204) return undefined as T;
   const data = await res.json().catch(() => null);
   if (!res.ok) {

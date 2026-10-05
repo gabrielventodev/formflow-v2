@@ -54,7 +54,20 @@ El esquema está definido en `api/internal/schema` (Go, valida al publicar) y en
 
 API (`/api/v1/admin/forms`): `GET /`, `POST /`, `GET|PATCH|DELETE /{id}`, `POST /{id}/publish`, `POST /{id}/duplicate`, `POST /{id}/archive`, `POST /{id}/restore`, `GET /{id}/validate`, `GET /{id}/versions`, `GET /{id}/versions/{n}`.
 
-> Estas rutas todavía no piden sesión: la autenticación de administradores llega con el panel administrativo.
+Todas las rutas `/api/v1/admin/*` exigen sesión de administrador (ver abajo).
+
+## Panel administrativo
+
+Entra en http://localhost:3000/admin con la cuenta inicial: `ADMIN_EMAIL` / `ADMIN_PASSWORD` (por defecto `admin@formflow.local` / `cambiame123`; la API la crea al arrancar si no existe). Para ver el panel con datos sin pasar por el portal: `make seed-envios`.
+
+- **Bandeja de envíos** con pestañas (por revisar, asignados a mí, observados, aprobados, rechazados, todos), búsqueda por nombre, email o ID, filtros por formulario, revisor y fechas, y exportación a CSV con los mismos filtros (una columna por campo al filtrar por un formulario).
+- **Detalle** con las respuestas mostradas según la versión del formulario con que se llenaron, documentos para ver o descargar, comentarios generales y por campo, e historial de auditoría.
+- **Estados**: tomar para revisión, pedir correcciones (con observaciones por campo), aprobar o rechazar (con motivo). Owners y admins pueden reabrir una decisión. Tomar un envío lo asigna a quien lo toma si no tenía revisor.
+- **Sesiones** propias en Go: contraseñas con argon2id, sesión en Postgres y cookie httpOnly. El navegador habla con la API a través de `/api/v1` en el mismo dominio de Next.js, así la cookie es de primera parte. Activa `COOKIE_SECURE=true` detrás de HTTPS.
+
+API (`/api/v1`): `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`; y en `/admin/submissions`: `GET /`, `GET /facets`, `GET /export.csv`, `GET /{id}`, `POST /{id}/transition`, `POST /{id}/comments`, `POST /{id}/comments/{commentId}/resolve`, `PUT /{id}/assignee`, `GET /{id}/files/{fileId}`.
+
+Los documentos se leen del mismo almacenamiento que usa el portal (`STORAGE_DRIVER`: disco local o MinIO/S3). Las rutas de enlaces del portal (`/api/v1/admin/links`) también exigen sesión.
 
 ## Portal de llenado
 
@@ -89,7 +102,7 @@ API pública (`/api/v1/portal`): `GET /links/{token}`, `POST /links/{token}/star
 
 ```sh
 make test
-# con Postgres local, también las pruebas de la API contra la base:
+# con Postgres local, también las pruebas de la API contra la base (no borran datos):
 TEST_DATABASE_URL=postgres://formflow:formflow@localhost:5432/formflow?sslmode=disable make test
 ```
 

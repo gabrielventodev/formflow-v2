@@ -42,6 +42,8 @@ services:
       SMTP_USERNAME: ${SMTP_USERNAME:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       MAIL_FROM: ${MAIL_FROM:-FormFlow <no-reply@localhost>}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@formflow.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-cambiame123}
     depends_on:
       db:
         condition: service_healthy
