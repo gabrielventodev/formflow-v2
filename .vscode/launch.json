@@ -1,0 +1,50 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "API (Go)",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/api/cmd/api",
+      "cwd": "${workspaceFolder}/api",
+      "env": {
+        "API_ADDR": ":8080",
+        "DATABASE_URL": "postgres://formflow:formflow@localhost:5432/formflow?sslmode=disable",
+        "WEB_ORIGIN": "http://localhost:3000"
+      },
+      "preLaunchTask": "db: up"
+    },
+    {
+      "name": "Web (Next.js)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/web",
+      "env": {
+        "API_URL": "http://localhost:8080",
+        "NEXT_PUBLIC_API_URL": "http://localhost:8080"
+      },
+      "preLaunchTask": "web: install",
+      "serverReadyAction": {
+        "pattern": "- Local:.+(https?://\\S+)",
+        "uriFormat": "%s",
+        "action": "openExternally"
+      }
+    },
+    {
+      "name": "Web (navegador Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/web"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "FormFlow: API + Web",
+      "configurations": ["API (Go)", "Web (Next.js)"],
+      "stopAll": true
+    }
+  ]
+}
