@@ -135,13 +135,15 @@ export function Canvas({
                                 {handle}
                                 <div className="min-w-0 flex-1">
                                   <div className="truncate text-sm font-medium">
-                                    {f.label || <span className="text-zinc-400">Sin etiqueta</span>}
+                                    {f.label || <span className="text-zinc-400">{f.type === "divider" ? "— línea —" : f.type === "spacer" ? "Espacio en blanco" : "Sin etiqueta"}</span>}
                                     {f.required && <span className="text-red-600"> *</span>}
                                   </div>
                                   <div className="flex items-center gap-1.5 text-xs text-zinc-500">
                                     <span>{typeLabel(f.type)}</span>
                                     <span className="font-mono text-zinc-400">{f.key}</span>
                                     {f.type === "repeater" && <span>· {f.fields?.length ?? 0} campos</span>}
+                                    {f.type === "currency" && f.currency && <span>· {f.currency}</span>}
+                                    {f.type === "scale" && <span>· {f.min ?? 1} a {f.max ?? 5}</span>}
                                   </div>
                                 </div>
                                 {f.showIf && (

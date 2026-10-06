@@ -2,11 +2,12 @@
 
 import { AlertTriangle, Check, CheckCircle2, Clock, Loader2, XCircle } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { FieldInput } from "@/components/form-renderer";
 import { FileField } from "@/components/portal/file-field";
 import { Button } from "@/components/ui";
-import { evaluate, validateAnswer, type Answers, type Field, type FormSchema, type Section } from "@/lib/form-schema";
+import { SignatureView } from "@/components/signature-pad";
+import { evaluate, formatAnswer, hasAnswer, validateAnswer, type Answers, type Field, type FormSchema, type Section } from "@/lib/form-schema";
 import { ApiError, portal, statusLabel, type Errors, type ReviewComment, type SubmissionView, type UploadedFile } from "@/lib/portal-api";
 import { cn, formatDate } from "@/lib/utils";
 
@@ -377,15 +378,9 @@ function ReviewerNotes({ comments }: { comments: ReviewComment[] }) {
   );
 }
 
-function display(f: Field, v: unknown): string {
-  if (v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0)) return "—";
-  if (f.type === "checkbox") return v === true ? "Sí" : "No";
-  if (Array.isArray(v)) return v.join(", ");
-  if (f.type === "date" && typeof v === "string") {
-    const [y, m, d] = v.split("-");
-    return d ? `${d}-${m}-${y}` : v;
-  }
-  return String(v);
+function display(f: Field, v: unknown): ReactNode {
+  if (f.type === "signature" && typeof v === "string" && v) return <SignatureView path={v} className="max-w-60 text-zinc-900" />;
+  return formatAnswer(f, v) || "—";
 }
 
 function Summary({
@@ -403,7 +398,7 @@ function Summary({
 }) {
   const list = sections ?? schema.sections.filter((s) => evaluate(s.showIf, answers));
   const fileNames = (path: string) => files.filter((f) => f.fieldKey === path).map((f) => f.filename).join(", ") || "—";
-  const value = (f: Field, v: unknown, path: string) => (f.type === "file" ? fileNames(path) : display(f, v));
+  const value = (f: Field, v: unknown, path: string): ReactNode => (f.type === "file" ? fileNames(path) : display(f, v));
 
   return (
     <div className="space-y-4">
@@ -419,7 +414,7 @@ function Summary({
           </div>
           <dl className="divide-y divide-zinc-100 text-sm">
             {s.fields
-              .filter((f) => evaluate(f.showIf, answers))
+              .filter((f) => hasAnswer(f.type) && evaluate(f.showIf, answers))
               .map((f) =>
                 f.type === "repeater" ? (
                   <div key={f.key} className="px-4 py-2.5">

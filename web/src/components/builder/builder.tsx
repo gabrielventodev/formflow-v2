@@ -6,7 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import { FormRenderer } from "@/components/form-renderer";
 import { Button, Input } from "@/components/ui";
 import { ApiError, apiGet, apiPatch, apiPost, formsPath, type FormDetail, type FormVersion, type VersionInfo } from "@/lib/api";
-import { FIELD_TYPES, locateProblem, type FieldType, type FormSchema, type Problem } from "@/lib/form-schema";
+import { FIELD_GROUPS, FIELD_TYPES, locateProblem, type FieldType, type FormSchema, type Problem } from "@/lib/form-schema";
 import { cn, formatDate } from "@/lib/utils";
 import { Canvas } from "./canvas";
 import { Inspector } from "./inspector";
@@ -199,16 +199,23 @@ export function Builder({ formId }: { formId: string }) {
         <div className={cn("grid flex-1 grid-cols-[200px_1fr_320px] gap-4 p-4", archived && "pointer-events-none opacity-60")}>
           <aside>
             <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">Agregar campo</h2>
-            <div className="space-y-1">
-              {FIELD_TYPES.map((t) => (
-                <button
-                  key={t.type}
-                  onClick={() => addOfType(t.type)}
-                  className="block w-full rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-left hover:border-zinc-400"
-                >
-                  <span className="block text-sm font-medium">{t.label}</span>
-                  <span className="block text-xs text-zinc-500">{t.description}</span>
-                </button>
+            <div className="space-y-4">
+              {FIELD_GROUPS.map((g) => (
+                <div key={g.value}>
+                  <h3 className="mb-1 text-[11px] font-medium text-zinc-500">{g.label}</h3>
+                  <div className="space-y-1">
+                    {FIELD_TYPES.filter((t) => t.group === g.value).map((t) => (
+                      <button
+                        key={t.type}
+                        onClick={() => addOfType(t.type)}
+                        className="block w-full rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-left hover:border-zinc-400"
+                      >
+                        <span className="block text-sm font-medium">{t.label}</span>
+                        <span className="block text-xs text-zinc-500">{t.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </aside>
