@@ -9,6 +9,7 @@ import {
   formatBytes,
   formatDate,
   STATUS_LABEL,
+  type ApprovalState,
   type CommentRow,
   type Facets,
   type FileRow,
@@ -35,6 +36,74 @@ function buttonFor(from: Status, to: Status) {
   if (to === "in_review" && (from === "approved" || from === "rejected")) return { label: "Reabrir revisión", className: "btn" };
   if (to === "in_review" && from === "changes_requested") return { label: "Retirar observación", className: "btn" };
   return ACTION_BUTTON[to];
+}
+
+function approveButton(approval: ApprovalState | null) {
+  const base = ACTION_BUTTON.approved;
+  if (!approval || approval.steps.length === 0) return base;
+  const i = approval.current;
+  const total = approval.steps.length;
+  if (i < total - 1) return { label: `Aprobar paso ${i + 1} de ${total}: ${approval.steps[i].name}`, className: "btn-primary" };
+  return total > 1 ? { ...base, label: `Aprobar (último paso: ${approval.steps[i].name})` } : base;
+}
+
+// ApprovalPanel shows the form's approval flow: who signed which step and what is pending.
+function ApprovalPanel({ approval, status }: { approval: ApprovalState; status: Status }) {
+  const valid = approval.approvals.filter((a) => !a.invalidated_at);
+  const voided = approval.approvals.filter((a) => a.invalidated_at);
+  const open = status === "submitted" || status === "in_review";
+  return (
+    <section className="card">
+      <h2 className="border-b border-zinc-200 px-4 py-3 font-medium">Aprobaciones</h2>
+      <ol className="flex flex-col gap-3 p-4 text-sm">
+        {approval.steps.map((st, i) => {
+          const signed = valid.find((a) => a.step === i);
+          const current = open && !signed && i === approval.current;
+          return (
+            <li key={i} className="flex gap-3">
+              <span
+                aria-hidden
+                className={`grid size-6 shrink-0 place-items-center rounded-full text-xs font-medium ${
+                  signed ? "bg-emerald-600 text-white" : current ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-500"
+                }`}
+              >
+                {signed ? "✓" : i + 1}
+              </span>
+              <div className="min-w-0">
+                <div className="font-medium">
+                  {st.name}
+                  {current && <span className="ml-2 rounded bg-violet-100 px-1.5 py-0.5 text-xs font-normal text-violet-800">Pendiente</span>}
+                </div>
+                {signed ? (
+                  <div className="text-xs text-zinc-500">
+                    {signed.user.name || signed.user.email} · {formatDate(signed.created_at)}
+                    {signed.comment && <div className="italic text-zinc-600">“{signed.comment}”</div>}
+                  </div>
+                ) : (
+                  <div className="text-xs text-zinc-500">
+                    {st.approvers.length ? st.approvers.map((a) => a.name || a.email).join(", ") : "Cualquier miembro del equipo"}
+                  </div>
+                )}
+              </div>
+            </li>
+          );
+        })}
+        {approval.steps.length === 0 && <li className="text-zinc-500">El formulario ya no tiene flujo de aprobación.</li>}
+      </ol>
+      {voided.length > 0 && (
+        <details className="border-t border-zinc-100 px-4 py-3 text-xs text-zinc-500">
+          <summary className="cursor-pointer">Firmas anuladas ({voided.length})</summary>
+          <ul className="mt-2 flex flex-col gap-1">
+            {voided.map((a, i) => (
+              <li key={i}>
+                {a.step_name}: {a.user.name || a.user.email} · {formatDate(a.created_at)} (anulada {formatDate(a.invalidated_at)})
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </section>
+  );
 }
 
 // Answers may be stored flat ({key: value}) or grouped by section ({section: {key: value}}).
@@ -219,13 +288,23 @@ export default function SubmissionPage() {
         <div className="card flex flex-wrap items-center gap-2 p-3">
           <span className="mr-2 text-sm text-zinc-500">Acciones:</span>
           {detail.allowed_transitions.map((to) => {
-            const b = buttonFor(s.status, to);
+            const b = to === "approved" ? approveButton(detail.approval) : buttonFor(s.status, to);
+            const blocked = to === "approved" && detail.approval?.steps.length && !detail.approval.can_approve;
             return (
-              <button key={to} onClick={() => setAction(to)} className={b.className}>
+              <button
+                key={to}
+                onClick={() => setAction(to)}
+                disabled={!!blocked}
+                title={blocked ? detail.approval?.reason : undefined}
+                className={`${b.className} disabled:cursor-not-allowed`}
+              >
                 {b.label}
               </button>
             );
           })}
+          {detail.approval?.reason && detail.allowed_transitions.includes("approved") && (
+            <span className="text-xs text-zinc-500">{detail.approval.reason}</span>
+          )}
         </div>
       )}
       {error && <p className="text-sm text-rose-600">{error}</p>}
@@ -291,6 +370,7 @@ export default function SubmissionPage() {
         </div>
 
         <aside className="flex flex-col gap-6">
+          {detail.approval && <ApprovalPanel approval={detail.approval} status={s.status} />}
           <section className="card">
             <h2 className="border-b border-zinc-200 px-4 py-3 font-medium">Comentarios</h2>
             <div className="flex flex-col gap-3 p-4">
@@ -314,6 +394,7 @@ export default function SubmissionPage() {
                     </span>{" "}
                     {ACTION_LABEL[e.action]?.toLowerCase() ?? e.action}
                     {e.action === "assigned" && <> a {reviewerName(reviewers, e.metadata.assigned_to)}</>}
+                    {typeof e.metadata.step_name === "string" && <> {e.action === "approved" ? "el último paso, " : ""}{e.metadata.step_name}</>}
                   </span>
                   {e.from_status && e.to_status && (
                     <span className="text-xs text-zinc-500">
@@ -334,6 +415,7 @@ export default function SubmissionPage() {
           submissionId={id}
           from={s.status}
           to={action}
+          approval={action === "approved" ? detail.approval : null}
           fields={[...fieldLabels.entries()]}
           onClose={() => setAction(null)}
           onDone={() => {
@@ -411,6 +493,7 @@ function TransitionDialog({
   submissionId,
   from,
   to,
+  approval,
   fields,
   onClose,
   onDone,
@@ -418,6 +501,7 @@ function TransitionDialog({
   submissionId: string;
   from: Status;
   to: Status;
+  approval: ApprovalState | null;
   fields: [string, string][];
   onClose: () => void;
   onDone: () => void;
@@ -426,7 +510,9 @@ function TransitionDialog({
   const [observations, setObservations] = useState<{ field_key: string; body: string }[]>([]);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
-  const b = buttonFor(from, to);
+  const b = to === "approved" ? approveButton(approval) : buttonFor(from, to);
+  const pendingStep = approval && approval.steps.length > 0 ? approval.steps[approval.current] : null;
+  const intermediate = !!pendingStep && approval!.current < approval!.steps.length - 1;
   const needsComment = to === "rejected";
   const isChanges = to === "changes_requested";
   const validObs = observations.filter((o) => o.field_key && o.body.trim());
@@ -452,7 +538,14 @@ function TransitionDialog({
       <form onSubmit={submit} onClick={(e) => e.stopPropagation()} className="card flex w-full max-w-lg flex-col gap-4 p-6 shadow-xl">
         <h2 className="text-lg font-semibold">{b.label}</h2>
         <p className="text-sm text-zinc-500">
-          El envío pasará de <strong>{STATUS_LABEL[from]}</strong> a <strong>{STATUS_LABEL[to]}</strong>.
+          {intermediate ? (
+            <>
+              Firmas el paso <strong>{pendingStep!.name}</strong>. El envío sigue <strong>{STATUS_LABEL.in_review}</strong> y pasa al paso{" "}
+              <strong>{approval!.steps[approval!.current + 1].name}</strong>.
+            </>
+          ) : (
+            <>El envío pasará de <strong>{STATUS_LABEL[from]}</strong> a <strong>{STATUS_LABEL[to]}</strong>.</>
+          )}
           {isChanges && " El solicitante podrá corregir los campos observados y reenviar."}
         </p>
 

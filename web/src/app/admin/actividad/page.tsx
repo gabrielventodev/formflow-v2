@@ -19,8 +19,13 @@ function actor(e: ActivityRow): string {
   return e.actor_name || "Usuario";
 }
 
-// Who the event is about: the member for team changes, or nothing (the submission is shown apart).
+// What the event is about beyond its submission: the member, the form's flow or the approval step.
 function target(e: ActivityRow): string {
+  if (e.action === "form.approval_flow_updated") {
+    const steps = Array.isArray(e.metadata.steps) ? (e.metadata.steps as string[]) : [];
+    return `${e.metadata.form_title ?? "un formulario"}: ${steps.length ? steps.join(" → ") : "sin pasos"}`;
+  }
+  if (e.action === "step_approved" && typeof e.metadata.step_name === "string") return e.metadata.step_name;
   const email = typeof e.metadata.email === "string" ? e.metadata.email : "";
   if (!e.action.startsWith("member.")) return "";
   const role = (r: unknown) => (typeof r === "string" && r in ROLE_LABEL ? ROLE_LABEL[r as Role].toLowerCase() : "");

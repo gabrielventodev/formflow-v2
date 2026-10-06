@@ -60,6 +60,8 @@ export type SubmissionRow = {
   decided_at: string | null;
   created_at: string;
   updated_at: string;
+  // Pending step of the form's approval flow while the submission is open.
+  approval_step: { index: number; total: number; name: string } | null;
 };
 
 export type SubmissionList = {
@@ -101,7 +103,25 @@ export type EventRow = {
   created_at: string;
 };
 
+export type ApprovalStepView = { name: string; approvers: UserRef[] };
+export type ApprovalRow = {
+  step: number;
+  step_name: string;
+  user: UserRef;
+  comment: string;
+  created_at: string;
+  invalidated_at: string | null;
+};
+export type ApprovalState = {
+  steps: ApprovalStepView[];
+  current: number;
+  approvals: ApprovalRow[];
+  can_approve: boolean;
+  reason?: string;
+};
+
 export type SubmissionDetail = {
+  approval: ApprovalState | null;
   submission: SubmissionRow;
   data: Record<string, unknown>;
   schema: FormSchema;
@@ -162,6 +182,7 @@ export const ACTION_LABEL: Record<string, string> = {
   commented: "Comentó",
   comment_resolved: "Marcó un comentario como resuelto",
   assigned: "Cambió el revisor",
+  step_approved: "Aprobó el paso",
   // Portal-side actions (actor_type applicant)
   "submission.created": "Empezó a llenar el formulario",
   "submission.submitted": "Envió el formulario",
@@ -175,4 +196,5 @@ export const ACTION_LABEL: Record<string, string> = {
   "member.deactivated": "Desactivó a",
   "member.reactivated": "Reactivó a",
   "member.updated": "Editó a",
+  "form.approval_flow_updated": "Cambió el flujo de aprobación de",
 };

@@ -130,6 +130,12 @@ export default function FormsPage() {
                     Compartir
                   </Link>
                 )}
+                <Link
+                  href={`/admin/forms/${f.id}/aprobaciones`}
+                  className="inline-flex h-8 items-center rounded-md px-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+                >
+                  Aprobaciones
+                </Link>
                 <Button size="sm" variant="ghost" onClick={() => act(() => apiPost(`${formsPath}/${f.id}/duplicate`))}>
                   Duplicar
                 </Button>
