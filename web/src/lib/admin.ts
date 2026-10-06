@@ -21,7 +21,30 @@ export const STATUS_STYLE: Record<Status, string> = {
   rejected: "bg-rose-100 text-rose-800",
 };
 
-export type Me = { id: string; email: string; name: string; organization_id: string; role: "owner" | "admin" | "reviewer" };
+export type Role = "owner" | "admin" | "reviewer";
+export type Me = { id: string; email: string; name: string; organization_id: string; role: Role };
+
+export const ROLE_LABEL: Record<Role, string> = { owner: "Propietario", admin: "Administrador", reviewer: "Revisor" };
+
+// Owners and admins build forms, share links, manage the team and see the activity log.
+export function canManage(role: Role): boolean {
+  return role === "owner" || role === "admin";
+}
+
+export type Member = {
+  id: string;
+  email: string;
+  name: string;
+  role: Role;
+  active: boolean;
+  pending: boolean;
+  created_at: string;
+  last_login_at: string | null;
+};
+
+export type ActivityRow = EventRow & {
+  submission: { id: string; applicant: string; form_title: string } | null;
+};
 export type UserRef = { id: string; name: string; email: string };
 
 export type SubmissionRow = {
@@ -145,4 +168,11 @@ export const ACTION_LABEL: Record<string, string> = {
   "submission.resubmitted": "Reenvió con correcciones",
   "file.uploaded": "Subió un documento",
   "file.deleted": "Eliminó un documento",
+  // Team changes (no submission attached)
+  "member.invited": "Invitó a",
+  "member.link_sent": "Envió un enlace de contraseña a",
+  "member.role_changed": "Cambió el rol de",
+  "member.deactivated": "Desactivó a",
+  "member.reactivated": "Reactivó a",
+  "member.updated": "Editó a",
 };

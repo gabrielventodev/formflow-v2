@@ -95,9 +95,14 @@ Entra en http://localhost:3000/admin con la cuenta inicial: `ADMIN_EMAIL` / `ADM
 - **Bandeja de envíos** con pestañas (por revisar, asignados a mí, observados, aprobados, rechazados, todos), búsqueda por nombre, email o ID, filtros por formulario, revisor y fechas, y exportación a CSV con los mismos filtros (una columna por campo al filtrar por un formulario).
 - **Detalle** con las respuestas mostradas según la versión del formulario con que se llenaron, documentos para ver o descargar, comentarios generales y por campo, e historial de auditoría.
 - **Estados**: tomar para revisión, pedir correcciones (con observaciones por campo), aprobar o rechazar (con motivo). Owners y admins pueden reabrir una decisión. Tomar un envío lo asigna a quien lo toma si no tenía revisor.
+- **Equipo** (`/admin/equipo`): owners y admins invitan miembros por email, cambian su rol y los desactivan. El invitado crea su contraseña desde el enlace del correo (si no hay SMTP, el enlace aparece en pantalla para copiarlo y en el log de la API). Desactivar cierra sus sesiones y deja sin asignar sus envíos abiertos.
+- **Roles**: `owner` (todo), `admin` (formularios, enlaces, revisión, equipo y actividad; no gestiona owners) y `reviewer` (solo revisa envíos; no ve Formularios ni Actividad).
+- **Actividad** (`/admin/actividad`): historial de auditoría de toda la organización, de envíos y del equipo.
+- **Contraseñas**: "¿Olvidaste tu contraseña?" en el login envía un enlace de 1 hora; en **Mi cuenta** (`/admin/cuenta`, clic en tu nombre) se cambia la propia.
+- **Emails al solicitante** en cada cambio de estado: cuando se toma para revisión, se piden correcciones, se aprueba o se rechaza.
 - **Sesiones** propias en Go: contraseñas con argon2id, sesión en Postgres y cookie httpOnly. El navegador habla con la API a través de `/api/v1` en el mismo dominio de Next.js, así la cookie es de primera parte. Activa `COOKIE_SECURE=true` detrás de HTTPS.
 
-API (`/api/v1`): `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`; y en `/admin/submissions`: `GET /`, `GET /facets`, `GET /export.csv`, `GET /{id}`, `POST /{id}/transition`, `POST /{id}/comments`, `POST /{id}/comments/{commentId}/resolve`, `PUT /{id}/assignee`, `GET /{id}/files/{fileId}`.
+API (`/api/v1`): `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, `PUT /auth/me/password`, `POST /auth/password/forgot`, `GET /auth/password/token`, `POST /auth/password/reset`; `/admin/team` (`GET /`, `POST /`, `PATCH /{id}`, `POST /{id}/invite`); `GET /admin/activity`; y en `/admin/submissions`: `GET /`, `GET /facets`, `GET /export.csv`, `GET /{id}`, `POST /{id}/transition`, `POST /{id}/comments`, `POST /{id}/comments/{commentId}/resolve`, `PUT /{id}/assignee`, `GET /{id}/files/{fileId}`.
 
 Los documentos se leen del mismo almacenamiento que usa el portal (`STORAGE_DRIVER`: disco local o MinIO/S3). Las rutas de enlaces del portal (`/api/v1/admin/links`) también exigen sesión.
 
