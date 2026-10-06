@@ -142,6 +142,8 @@ export function Canvas({
                                     <span>{typeLabel(f.type)}</span>
                                     <span className="font-mono text-zinc-400">{f.key}</span>
                                     {f.type === "repeater" && <span>· {f.fields?.length ?? 0} campos</span>}
+                                    {f.type === "currency" && f.currency && <span>· {f.currency}</span>}
+                                    {f.type === "scale" && <span>· {f.min ?? 1} a {f.max ?? 5}</span>}
                                   </div>
                                 </div>
                                 {f.showIf && (

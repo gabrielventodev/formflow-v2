@@ -18,6 +18,11 @@ import {
 } from "@/lib/admin";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { useMe } from "@/components/admin/shell";
+import { SignatureView } from "@/components/signature-pad";
+import { formatAnswer, type Field } from "@/lib/form-schema";
+
+// Types whose stored value needs formatting to read well (codes, amounts, objects).
+const FORMATTED = new Set(["currency", "country", "address", "datetime", "scale"]);
 
 const ACTION_BUTTON: Record<string, { label: string; className: string }> = {
   in_review: { label: "Tomar para revisión", className: "btn" },
@@ -76,6 +81,10 @@ function Value({ field, value, files }: { field: SchemaField; value: unknown; fi
       </div>
     );
   }
+  if (field.type === "signature" && typeof value === "string") {
+    return <SignatureView path={value} className="max-w-72 rounded border border-zinc-200 bg-white text-zinc-900" />;
+  }
+  if (FORMATTED.has(field.type)) return <>{formatAnswer(field as Field, value) || String(value)}</>;
   if (typeof value === "boolean") return <>{value ? "Sí" : "No"}</>;
   if (Array.isArray(value)) return <>{value.map((v) => optionLabel(field, v)).join(", ")}</>;
   if (typeof value === "object") return <pre className="whitespace-pre-wrap text-xs">{JSON.stringify(value, null, 2)}</pre>;
@@ -227,7 +236,7 @@ export default function SubmissionPage() {
             <section key={sec.key} className="card">
               <h2 className="border-b border-zinc-200 px-5 py-3 font-medium">{sec.title || sec.key}</h2>
               <dl className="divide-y divide-zinc-100">
-                {(sec.fields ?? []).map((f) => {
+                {(sec.fields ?? []).filter((f) => f.type !== "info").map((f) => {
                   const fieldComments = commentsByField.get(f.key) ?? [];
                   const open = fieldComments.some((c) => !c.resolved_at);
                   return (

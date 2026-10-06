@@ -58,6 +58,9 @@ export type SchemaField = {
   label?: string;
   help?: string;
   options?: (string | { value: string; label: string })[];
+  currency?: string;
+  min?: number;
+  max?: number;
   fields?: SchemaField[];
 };
 export type FormSchema = { sections?: { key: string; title?: string; fields?: SchemaField[] }[] };

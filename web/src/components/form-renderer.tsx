@@ -2,7 +2,22 @@
 
 import { useState, type ReactNode } from "react";
 import { Button, Checkbox, Input, Select, Textarea } from "@/components/ui";
-import { evaluate, validateAnswer, type Answers, type Field, type FormSchema } from "@/lib/form-schema";
+import { SignaturePad } from "@/components/signature-pad";
+import {
+  ADDRESS_PARTS,
+  FREQUENT_COUNTRIES,
+  countriesByName,
+  countryName,
+  evaluate,
+  fieldOptions,
+  formatAmount,
+  scaleRange,
+  validateAnswer,
+  type Address,
+  type Answers,
+  type Field,
+  type FormSchema,
+} from "@/lib/form-schema";
 import { cn } from "@/lib/utils";
 
 /**
@@ -149,6 +164,105 @@ export function FieldInput({
   const str = typeof value === "string" || typeof value === "number" ? String(value) : "";
   let input;
   switch (f.type) {
+    case "info":
+      return (
+        <div className="rounded-md border-l-4 border-zinc-300 bg-zinc-50 px-4 py-3">
+          <p className="text-sm font-semibold text-zinc-900">{f.label}</p>
+          {f.help && <p className="mt-1 whitespace-pre-line text-sm text-zinc-600">{f.help}</p>}
+          {note}
+        </div>
+      );
+    case "yesno":
+    case "radio":
+      input = (
+        <ChoiceGroup
+          id={id}
+          options={fieldOptions(f) ?? []}
+          value={str}
+          inline={f.type === "yesno"}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      );
+      break;
+    case "country":
+      input = <CountrySelect id={id} value={str} disabled={disabled} onChange={onChange} />;
+      break;
+    case "scale": {
+      const [lo, hi] = scaleRange(f);
+      input = (
+        <div id={id} role="radiogroup" className="flex flex-wrap gap-1.5">
+          {Array.from({ length: Math.max(0, hi - lo + 1) }, (_, i) => lo + i).map((n) => (
+            <button
+              key={n}
+              type="button"
+              role="radio"
+              aria-checked={value === n}
+              disabled={disabled}
+              onClick={() => onChange(value === n ? undefined : n)}
+              className={cn(
+                "h-9 min-w-9 rounded-md border px-2 text-sm font-medium transition-colors disabled:cursor-not-allowed",
+                value === n ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-300 bg-white text-zinc-800 hover:border-zinc-500",
+              )}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+      );
+      break;
+    }
+    case "currency":
+      input = (
+        <div>
+          <div className="flex">
+            <span className="inline-flex items-center rounded-l-md border border-r-0 border-zinc-300 bg-zinc-50 px-2.5 text-xs font-medium text-zinc-600">
+              {f.currency === "CLF" ? "UF" : f.currency || "CLP"}
+            </span>
+            <Input
+              id={id}
+              type="number"
+              inputMode="decimal"
+              step="any"
+              className="rounded-l-none"
+              value={str}
+              placeholder={f.placeholder ?? "0"}
+              min={f.min}
+              max={f.max}
+              disabled={disabled}
+              onChange={(e) => onChange(e.target.value)}
+            />
+          </div>
+          {str !== "" && !Number.isNaN(Number(str)) && (
+            <p className="mt-1 text-xs text-zinc-500">{formatAmount(str, f.currency)}</p>
+          )}
+        </div>
+      );
+      break;
+    case "address":
+      input = <AddressInput id={id} value={value} disabled={disabled} onChange={onChange} />;
+      break;
+    case "signature":
+      input = <SignaturePad id={id} value={str} disabled={disabled} onChange={(p) => onChange(p || undefined)} />;
+      break;
+    case "url":
+      input = (
+        <Input
+          id={id}
+          type="url"
+          inputMode="url"
+          value={str}
+          placeholder={f.placeholder ?? "https://"}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.value)}
+          // Applicants often type "empresa.cl"; add the scheme so it validates.
+          onBlur={(e) => {
+            const v = e.target.value.trim();
+            if (v && !/^[a-z][a-z0-9+.-]*:/i.test(v)) onChange(`https://${v}`);
+          }}
+        />
+      );
+      break;
     case "textarea":
       input = <Textarea id={id} value={str} placeholder={f.placeholder} disabled={disabled} onChange={(e) => onChange(e.target.value)} />;
       break;
@@ -257,7 +371,9 @@ export function FieldInput({
       break;
     }
     default: {
-      const type = { email: "email", phone: "tel", number: "number", date: "date" }[f.type as string] ?? "text";
+      const type =
+        { email: "email", phone: "tel", number: "number", date: "date", time: "time", datetime: "datetime-local" }[f.type as string] ??
+        "text";
       input = (
         <Input
           id={id}
@@ -282,6 +398,118 @@ export function FieldInput({
       {f.help && <p className="mt-1 text-xs text-zinc-500">{f.help}</p>}
       {note}
       {error && <p className={cn("mt-1 text-xs text-red-600")}>{error}</p>}
+    </div>
+  );
+}
+
+function ChoiceGroup({
+  id,
+  options,
+  value,
+  inline,
+  disabled,
+  onChange,
+}: {
+  id: string;
+  options: string[];
+  value: string;
+  inline?: boolean;
+  disabled?: boolean;
+  onChange: (v: unknown) => void;
+}) {
+  return (
+    <div id={id} role="radiogroup" className={cn(inline ? "flex flex-wrap gap-2" : "space-y-1.5")}>
+      {options.map((o) => (
+        <label
+          key={o}
+          className={cn(
+            "flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors",
+            inline && "min-w-20",
+            value === o ? "border-zinc-900 bg-zinc-50" : "border-zinc-200 hover:border-zinc-400",
+            disabled && "cursor-not-allowed opacity-70",
+          )}
+        >
+          <input
+            type="radio"
+            name={id}
+            className="h-4 w-4 accent-zinc-900"
+            checked={value === o}
+            disabled={disabled}
+            onChange={() => onChange(o)}
+          />
+          {o}
+        </label>
+      ))}
+    </div>
+  );
+}
+
+function CountrySelect({
+  id,
+  value,
+  disabled,
+  onChange,
+}: {
+  id: string;
+  value: string;
+  disabled?: boolean;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <Select id={id} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
+      <option value="">Selecciona un país…</option>
+      <optgroup label="Frecuentes">
+        {FREQUENT_COUNTRIES.map((c) => (
+          <option key={c} value={c}>
+            {countryName(c)}
+          </option>
+        ))}
+      </optgroup>
+      <optgroup label="Todos los países">
+        {countriesByName().map((c) => (
+          <option key={c.code} value={c.code}>
+            {c.name}
+          </option>
+        ))}
+      </optgroup>
+    </Select>
+  );
+}
+
+function AddressInput({
+  id,
+  value,
+  disabled,
+  onChange,
+}: {
+  id: string;
+  value: unknown;
+  disabled?: boolean;
+  onChange: (v: unknown) => void;
+}) {
+  const a = value && typeof value === "object" && !Array.isArray(value) ? (value as Address) : {};
+  const set = (k: keyof Address, v: string) => onChange({ ...a, [k]: v });
+  return (
+    <div id={id} className="grid gap-2 rounded-md border border-zinc-200 p-3 sm:grid-cols-2">
+      {ADDRESS_PARTS.map((p) => (
+        <div key={p.key} className={cn(p.key === "line1" && "sm:col-span-2")}>
+          <label htmlFor={`${id}-${p.key}`} className="mb-1 block text-xs text-zinc-600">
+            {p.label}
+            {p.optional && <span className="text-zinc-400"> (opcional)</span>}
+          </label>
+          {p.key === "country" ? (
+            <CountrySelect id={`${id}-${p.key}`} value={a.country ?? ""} disabled={disabled} onChange={(v) => set("country", v)} />
+          ) : (
+            <Input
+              id={`${id}-${p.key}`}
+              value={a[p.key] ?? ""}
+              disabled={disabled}
+              autoComplete={{ line1: "address-line1", line2: "address-line2", city: "address-level2", region: "address-level1", postalCode: "postal-code" }[p.key]}
+              onChange={(e) => set(p.key, e.target.value)}
+            />
+          )}
+        </div>
+      ))}
     </div>
   );
 }

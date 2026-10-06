@@ -5,10 +5,12 @@ import { useState } from "react";
 import { Button, Checkbox, Input, Label, Select, Textarea } from "@/components/ui";
 import {
   CONDITION_OPS,
+  CURRENCIES,
   FIELD_TYPES,
   FILE_ACCEPT,
   ID_KINDS,
   allKeys,
+  fieldOptions,
   fieldsBefore,
   slugify,
   typeLabel,
@@ -139,7 +141,8 @@ function FieldProps({ schema, sel, field, published, problems, onChange, onSelec
 
   const [optionsText, setOptionsText] = useState((field.options ?? []).join("\n"));
   const num = (v: string) => (v === "" ? undefined : Number(v));
-  const isText = ["text", "textarea", "email", "phone", "id"].includes(field.type);
+  const isText = ["text", "textarea", "email", "phone", "id", "url", "currency"].includes(field.type);
+  const isInfo = field.type === "info";
 
   return (
     <div className="space-y-4">
@@ -157,15 +160,22 @@ function FieldProps({ schema, sel, field, published, problems, onChange, onSelec
       <ProblemList problems={problemsAt(problems, path).filter((p) => nested || !p.path.startsWith(path + ".fields["))} />
 
       <div>
-        <Label htmlFor="f-label">Etiqueta</Label>
+        <Label htmlFor="f-label">{isInfo ? "Título" : "Etiqueta"}</Label>
         <Input id="f-label" value={field.label} onChange={(e) => setLabel(e.target.value)} />
       </div>
-      <div>
-        <Label htmlFor="f-help" hint="(opcional)">
-          Texto de ayuda
-        </Label>
-        <Input id="f-help" value={field.help ?? ""} onChange={(e) => set({ help: e.target.value })} />
-      </div>
+      {isInfo ? (
+        <div>
+          <Label htmlFor="f-help">Texto</Label>
+          <Textarea id="f-help" rows={4} value={field.help ?? ""} onChange={(e) => set({ help: e.target.value || undefined })} />
+        </div>
+      ) : (
+        <div>
+          <Label htmlFor="f-help" hint="(opcional)">
+            Texto de ayuda
+          </Label>
+          <Input id="f-help" value={field.help ?? ""} onChange={(e) => set({ help: e.target.value })} />
+        </div>
+      )}
       {isText && (
         <div>
           <Label htmlFor="f-ph" hint="(opcional)">
@@ -174,11 +184,11 @@ function FieldProps({ schema, sel, field, published, problems, onChange, onSelec
           <Input id="f-ph" value={field.placeholder ?? ""} onChange={(e) => set({ placeholder: e.target.value })} />
         </div>
       )}
-      {field.type !== "repeater" && (
+      {field.type !== "repeater" && !isInfo && (
         <Checkbox label="Obligatorio" checked={!!field.required} onChange={(e) => set({ required: e.target.checked || undefined })} />
       )}
 
-      {(field.type === "select" || field.type === "multiselect") && (
+      {(field.type === "select" || field.type === "multiselect" || field.type === "radio") && (
         <div>
           <Label htmlFor="f-opts" hint="una por línea">
             Opciones
@@ -208,10 +218,29 @@ function FieldProps({ schema, sel, field, published, problems, onChange, onSelec
         </div>
       )}
 
-      {(field.type === "number" || field.type === "text" || field.type === "textarea" || field.type === "repeater") && (
+      {field.type === "currency" && (
+        <div>
+          <Label htmlFor="f-currency">Moneda</Label>
+          <Select id="f-currency" value={field.currency ?? ""} onChange={(e) => set({ currency: e.target.value || undefined })}>
+            <option value="">Elige…</option>
+            {CURRENCIES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+      )}
+
+      {["number", "currency", "scale", "text", "textarea", "repeater"].includes(field.type) && (
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <Label htmlFor="f-min" hint={field.type === "number" ? "valor" : field.type === "repeater" ? "elementos" : "caracteres"}>
+            <Label
+              htmlFor="f-min"
+              hint={
+                field.type === "number" || field.type === "scale" ? "valor" : field.type === "currency" ? "monto" : field.type === "repeater" ? "elementos" : "caracteres"
+              }
+            >
               Mínimo
             </Label>
             <Input id="f-min" type="number" value={field.min ?? ""} onChange={(e) => set({ min: num(e.target.value) })} />
@@ -336,7 +365,7 @@ function SubFields({
       </ul>
       <div className="flex gap-2">
         <Select value={type} onChange={(e) => setType(e.target.value as FieldType)}>
-          {FIELD_TYPES.filter((t) => t.type !== "repeater").map((t) => (
+          {FIELD_TYPES.filter((t) => t.type !== "repeater" && t.type !== "info").map((t) => (
             <option key={t.type} value={t.type}>
               {t.label}
             </option>
@@ -397,10 +426,10 @@ function ConditionEditor({
             ))}
           </Select>
           {op?.needsValue &&
-            (target?.options ? (
+            (target && fieldOptions(target) ? (
               <Select value={String(value.value ?? "")} onChange={(e) => onChange({ ...value, value: e.target.value || undefined })}>
                 <option value="">Elige una opción…</option>
-                {target.options.map((o) => (
+                {fieldOptions(target)!.map((o) => (
                   <option key={o}>{o}</option>
                 ))}
               </Select>
