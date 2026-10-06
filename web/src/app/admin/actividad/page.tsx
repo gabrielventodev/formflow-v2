@@ -34,6 +34,7 @@ function target(e: ActivityRow): string {
     if (e.metadata.logo === "removed") parts.push("quitó el logo");
     return parts.length ? `: ${parts.join(", ")}` : "";
   }
+  if (e.action.startsWith("webhook.")) return typeof e.metadata.url === "string" ? e.metadata.url : "";
   if (e.action === "step_approved" && typeof e.metadata.step_name === "string") return e.metadata.step_name;
   const email = typeof e.metadata.email === "string" ? e.metadata.email : "";
   if (!e.action.startsWith("member.")) return "";

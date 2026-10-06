@@ -102,7 +102,7 @@ export default function FormsPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
-            <Button type="submit" variant="primary" disabled={!title.trim()}>
+            <Button type="submit" variant="primary" className="shrink-0 whitespace-nowrap" disabled={!title.trim()}>
               Crear en blanco
             </Button>
             <Button onClick={() => setCreating(false)}>Cancelar</Button>

@@ -198,4 +198,47 @@ export const ACTION_LABEL: Record<string, string> = {
   "member.updated": "Editó a",
   "form.approval_flow_updated": "Cambió el flujo de aprobación de",
   "organization.updated": "Cambió la marca de la organización",
+  "webhook.created": "Creó el webhook",
+  "webhook.updated": "Editó el webhook",
+  "webhook.deleted": "Eliminó el webhook",
+  "webhook.secret_rotated": "Rotó el secreto del webhook",
+};
+
+export type Webhook = {
+  id: string;
+  url: string;
+  description: string;
+  events: string[];
+  include_data: boolean;
+  active: boolean;
+  secret_hint: string;
+  created_at: string;
+  secret?: string; // only right after create or rotate
+  last_delivery: { status: DeliveryStatus; event: string; at: string } | null;
+  failing: number;
+};
+
+export type DeliveryStatus = "pending" | "succeeded" | "failed";
+
+export type Delivery = {
+  id: string;
+  event: string;
+  status: DeliveryStatus;
+  attempts: number;
+  last_status_code: number | null;
+  last_error: string;
+  created_at: string;
+  last_attempt_at: string | null;
+  next_attempt_at: string | null;
+  payload?: unknown;
+};
+
+export const WEBHOOK_EVENT_LABEL: Record<string, string> = {
+  "submission.submitted": "Envío recibido",
+  "submission.in_review": "En revisión",
+  "submission.step_approved": "Paso de aprobación firmado",
+  "submission.changes_requested": "Correcciones pedidas",
+  "submission.approved": "Aprobado",
+  "submission.rejected": "Rechazado",
+  ping: "Prueba",
 };
