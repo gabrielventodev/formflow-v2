@@ -11,6 +11,7 @@ import {
   ID_KINDS,
   allKeys,
   fieldOptions,
+  isDisplay,
   fieldsBefore,
   slugify,
   typeLabel,
@@ -142,7 +143,9 @@ function FieldProps({ schema, sel, field, published, problems, onChange, onSelec
   const [optionsText, setOptionsText] = useState((field.options ?? []).join("\n"));
   const num = (v: string) => (v === "" ? undefined : Number(v));
   const isText = ["text", "textarea", "email", "phone", "id", "url", "currency"].includes(field.type);
-  const isInfo = field.type === "info";
+  const isInfo = field.type === "info" || field.type === "heading";
+  const display = isDisplay(field.type);
+  const bare = field.type === "divider" || field.type === "spacer";
 
   return (
     <div className="space-y-4">
@@ -159,13 +162,24 @@ function FieldProps({ schema, sel, field, published, problems, onChange, onSelec
       </div>
       <ProblemList problems={problemsAt(problems, path).filter((p) => nested || !p.path.startsWith(path + ".fields["))} />
 
-      <div>
-        <Label htmlFor="f-label">{isInfo ? "Título" : "Etiqueta"}</Label>
-        <Input id="f-label" value={field.label} onChange={(e) => setLabel(e.target.value)} />
-      </div>
-      {isInfo ? (
+      {display && (
+        <p className="rounded-md bg-zinc-50 p-2.5 text-xs text-zinc-600">
+          Bloque de diseño: el solicitante no lo llena y no aparece en la revisión ni en las exportaciones.
+        </p>
+      )}
+      {field.type !== "spacer" && (
         <div>
-          <Label htmlFor="f-help">Texto</Label>
+          <Label htmlFor="f-label" hint={field.type === "divider" ? "(opcional, se muestra sobre la línea)" : undefined}>
+            {field.type === "divider" ? "Texto" : isInfo ? "Título" : "Etiqueta"}
+          </Label>
+          <Input id="f-label" value={field.label} onChange={(e) => (field.type === "divider" ? set({ label: e.target.value }) : setLabel(e.target.value))} />
+        </div>
+      )}
+      {bare ? null : isInfo ? (
+        <div>
+          <Label htmlFor="f-help" hint={field.type === "heading" ? "(opcional)" : undefined}>
+            {field.type === "heading" ? "Subtítulo" : "Texto"}
+          </Label>
           <Textarea id="f-help" rows={4} value={field.help ?? ""} onChange={(e) => set({ help: e.target.value || undefined })} />
         </div>
       ) : (
@@ -184,7 +198,7 @@ function FieldProps({ schema, sel, field, published, problems, onChange, onSelec
           <Input id="f-ph" value={field.placeholder ?? ""} onChange={(e) => set({ placeholder: e.target.value })} />
         </div>
       )}
-      {field.type !== "repeater" && !isInfo && (
+      {field.type !== "repeater" && !display && (
         <Checkbox label="Obligatorio" checked={!!field.required} onChange={(e) => set({ required: e.target.checked || undefined })} />
       )}
 
@@ -310,7 +324,7 @@ function FieldProps({ schema, sel, field, published, problems, onChange, onSelec
       )}
 
       <div>
-        <Label htmlFor="f-key" hint="nombre de la columna en las respuestas">
+        <Label htmlFor="f-key" hint={display ? "identificador interno" : "nombre de la columna en las respuestas"}>
           Clave
         </Label>
         <Input
@@ -320,7 +334,7 @@ function FieldProps({ schema, sel, field, published, problems, onChange, onSelec
           onChange={(e) => setKey(e.target.value)}
           onBlur={(e) => setKey(slugify(e.target.value))}
         />
-        {published && <p className="mt-1 text-xs text-zinc-500">Cambiar la clave de un formulario publicado separa las respuestas nuevas de las anteriores en las exportaciones.</p>}
+        {published && !display && <p className="mt-1 text-xs text-zinc-500">Cambiar la clave de un formulario publicado separa las respuestas nuevas de las anteriores en las exportaciones.</p>}
       </div>
     </div>
   );
@@ -365,7 +379,7 @@ function SubFields({
       </ul>
       <div className="flex gap-2">
         <Select value={type} onChange={(e) => setType(e.target.value as FieldType)}>
-          {FIELD_TYPES.filter((t) => t.type !== "repeater" && t.type !== "info").map((t) => (
+          {FIELD_TYPES.filter((t) => t.type !== "repeater" && !isDisplay(t.type)).map((t) => (
             <option key={t.type} value={t.type}>
               {t.label}
             </option>

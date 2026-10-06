@@ -19,7 +19,7 @@ import {
 import { StatusBadge } from "@/components/admin/status-badge";
 import { useMe } from "@/components/admin/shell";
 import { SignatureView } from "@/components/signature-pad";
-import { formatAnswer, type Field } from "@/lib/form-schema";
+import { formatAnswer, isDisplay, type Field } from "@/lib/form-schema";
 
 // Types whose stored value needs formatting to read well (codes, amounts, objects).
 const FORMATTED = new Set(["currency", "country", "address", "datetime", "scale"]);
@@ -236,7 +236,7 @@ export default function SubmissionPage() {
             <section key={sec.key} className="card">
               <h2 className="border-b border-zinc-200 px-5 py-3 font-medium">{sec.title || sec.key}</h2>
               <dl className="divide-y divide-zinc-100">
-                {(sec.fields ?? []).filter((f) => f.type !== "info").map((f) => {
+                {(sec.fields ?? []).filter((f) => !isDisplay(f.type)).map((f) => {
                   const fieldComments = commentsByField.get(f.key) ?? [];
                   const open = fieldComments.some((c) => !c.resolved_at);
                   return (

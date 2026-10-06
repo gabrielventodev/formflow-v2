@@ -71,12 +71,13 @@ Para traer lo último de formsis-backend: `git submodule update --remote api` y 
 En http://localhost:3000/admin/forms se crean, editan, duplican y archivan formularios.
 
 - Cada sección es un paso del formulario. Los campos se agregan desde el panel izquierdo y se reordenan arrastrando (también entre secciones).
-- Tipos de campo (23), agrupados en el panel:
+- Tipos de campo (26), agrupados en el panel:
   - Texto y contacto: texto corto y largo, email, teléfono, sitio web y dirección (calle, ciudad, región, código postal y país).
   - Números y fechas: número, monto con moneda (CLP, UF, PEN, USD…), fecha, hora, fecha y hora, y escala (p. ej. 1 a 5).
   - Opciones: sí/no, opción única con botones, lista desplegable, selección múltiple, casilla y país.
   - Identidad y documentos: RUT/DNI con validación, archivo y firma dibujada (se guarda como trazo vectorial, sin imagen).
-  - Estructura: grupo repetible (p. ej. socios) y texto informativo (título y aclaración, sin respuesta).
+  - Estructura: grupo repetible (p. ej. socios).
+  - Diseño: título con subtítulo, separador (línea con texto opcional), espacio y texto informativo. No se llenan, no son obligatorios y no aparecen en la revisión del panel ni en el CSV.
 - Por campo: etiqueta, ayuda, obligatorio, mínimo/máximo, expresión regular, tipos y tamaño de archivo, y una condición para mostrarlo según otro campo anterior.
 - Los cambios se guardan solos en un borrador. **Publicar** congela una versión inmutable (v1, v2…); los envíos quedan atados a la versión con la que se llenaron. Editar un formulario publicado solo cambia el borrador hasta volver a publicar.
 - La pestaña **Vista previa** muestra el formulario como lo verá el solicitante, con condiciones y validaciones.

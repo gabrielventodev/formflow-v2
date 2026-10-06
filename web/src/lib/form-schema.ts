@@ -23,7 +23,10 @@ export type FieldType =
   | "address"
   | "scale"
   | "signature"
-  | "info";
+  | "info"
+  | "heading"
+  | "divider"
+  | "spacer";
 
 export type ConditionOp = "eq" | "neq" | "contains" | "empty" | "notEmpty";
 
@@ -67,7 +70,7 @@ export type FormSchema = { sections: Section[] };
 
 export type Problem = { path: string; message: string };
 
-export type FieldGroup = "text" | "numbers" | "choices" | "documents" | "layout";
+export type FieldGroup = "text" | "numbers" | "choices" | "documents" | "layout" | "display";
 
 export const FIELD_GROUPS: { value: FieldGroup; label: string }[] = [
   { value: "text", label: "Texto y contacto" },
@@ -75,6 +78,7 @@ export const FIELD_GROUPS: { value: FieldGroup; label: string }[] = [
   { value: "choices", label: "Opciones" },
   { value: "documents", label: "Identidad y documentos" },
   { value: "layout", label: "Estructura" },
+  { value: "display", label: "Diseño (no se llenan)" },
 ];
 
 export const FIELD_TYPES: { type: FieldType; label: string; description: string; group: FieldGroup }[] = [
@@ -100,7 +104,10 @@ export const FIELD_TYPES: { type: FieldType; label: string; description: string;
   { type: "file", label: "Archivo", description: "Documento o imagen", group: "documents" },
   { type: "signature", label: "Firma", description: "Firma dibujada", group: "documents" },
   { type: "repeater", label: "Grupo repetible", description: "Ej.: socios", group: "layout" },
-  { type: "info", label: "Texto informativo", description: "Título y aclaración", group: "layout" },
+  { type: "heading", label: "Título", description: "Encabezado y subtítulo", group: "display" },
+  { type: "divider", label: "Separador", description: "Línea horizontal", group: "display" },
+  { type: "spacer", label: "Espacio", description: "Aire entre bloques", group: "display" },
+  { type: "info", label: "Texto informativo", description: "Aviso destacado", group: "display" },
 ];
 
 export const typeLabel = (t: FieldType) => FIELD_TYPES.find((x) => x.type === t)?.label ?? t;
@@ -249,10 +256,14 @@ export function fieldOptions(f: Field): string[] | undefined {
 }
 
 /** Whether the type collects an answer (an info block does not). */
-export const hasAnswer = (t: FieldType) => t !== "info";
+/** Display blocks (title, line, space, note) lay out the form: no answer, never required, not reviewed. */
+export const isDisplay = (t: FieldType | string) => ["info", "heading", "divider", "spacer"].includes(t);
+
+/** Whether the type collects an answer. */
+export const hasAnswer = (t: FieldType) => !isDisplay(t);
 
 /** Whether a condition may depend on fields of this type. */
-export const conditionable = (t: FieldType) => !["repeater", "file", "address", "signature", "info"].includes(t);
+export const conditionable = (t: FieldType) => hasAnswer(t) && !["repeater", "file", "address", "signature"].includes(t);
 
 export const FILE_ACCEPT: { value: string; label: string }[] = [
   { value: "application/pdf", label: "PDF" },
@@ -306,6 +317,7 @@ export function newField(type: FieldType, taken: Set<string>): Field {
     f.min = 1;
     f.max = 5;
   }
+  if (type === "divider" || type === "spacer") f.label = "";
   if (type === "info") {
     f.label = "Antes de continuar";
     f.help = "Escribe aquí una aclaración para el solicitante.";

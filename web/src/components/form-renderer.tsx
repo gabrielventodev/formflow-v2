@@ -172,6 +172,26 @@ export function FieldInput({
           {note}
         </div>
       );
+    case "heading":
+      return (
+        <div className="pt-2">
+          <h3 className="text-base font-semibold text-zinc-900">{f.label}</h3>
+          {f.help && <p className="mt-0.5 whitespace-pre-line text-sm text-zinc-600">{f.help}</p>}
+          {note}
+        </div>
+      );
+    case "divider":
+      return f.label ? (
+        <div className="flex items-center gap-3 py-1" role="separator">
+          <span className="h-px flex-1 bg-zinc-200" />
+          <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">{f.label}</span>
+          <span className="h-px flex-1 bg-zinc-200" />
+        </div>
+      ) : (
+        <hr className="border-zinc-200" />
+      );
+    case "spacer":
+      return <div aria-hidden className="h-6" />;
     case "yesno":
     case "radio":
       input = (
