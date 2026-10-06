@@ -25,6 +25,15 @@ function target(e: ActivityRow): string {
     const steps = Array.isArray(e.metadata.steps) ? (e.metadata.steps as string[]) : [];
     return `${e.metadata.form_title ?? "un formulario"}: ${steps.length ? steps.join(" → ") : "sin pasos"}`;
   }
+  if (e.action === "organization.updated") {
+    const parts: string[] = [];
+    if (typeof e.metadata.name === "string") parts.push(`nombre «${e.metadata.name}»`);
+    if (typeof e.metadata.primary_color === "string") parts.push(`color ${e.metadata.primary_color}`);
+    if (typeof e.metadata.support_email === "string") parts.push(e.metadata.support_email ? `contacto ${e.metadata.support_email}` : "sin email de contacto");
+    if (e.metadata.logo === "updated") parts.push("logo nuevo");
+    if (e.metadata.logo === "removed") parts.push("quitó el logo");
+    return parts.length ? `: ${parts.join(", ")}` : "";
+  }
   if (e.action === "step_approved" && typeof e.metadata.step_name === "string") return e.metadata.step_name;
   const email = typeof e.metadata.email === "string" ? e.metadata.email : "";
   if (!e.action.startsWith("member.")) return "";

@@ -52,3 +52,24 @@ body {
     transform: none;
   }
 }
+
+/* Applicant portal in the organization's color. Components use zinc-900 as their
+   primary; inside .brand-scope (portal layout) it becomes var(--brand). The API
+   only accepts colors with AA contrast against white text. */
+.brand-scope .bg-zinc-900 {
+  background-color: var(--brand);
+}
+.brand-scope .hover\:bg-zinc-700:hover {
+  background-color: color-mix(in srgb, var(--brand) 85%, black);
+}
+.brand-scope .border-zinc-900,
+.brand-scope .focus\:border-zinc-900:focus,
+.brand-scope .focus-within\:border-zinc-900:focus-within {
+  border-color: var(--brand);
+}
+.brand-scope .focus\:ring-zinc-900:focus {
+  --tw-ring-color: var(--brand);
+}
+.brand-scope .accent-zinc-900 {
+  accent-color: var(--brand);
+}

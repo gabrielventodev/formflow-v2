@@ -197,4 +197,5 @@ export const ACTION_LABEL: Record<string, string> = {
   "member.reactivated": "Reactivó a",
   "member.updated": "Editó a",
   "form.approval_flow_updated": "Cambió el flujo de aprobación de",
+  "organization.updated": "Cambió la marca de la organización",
 };

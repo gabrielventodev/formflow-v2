@@ -18,6 +18,7 @@ const NAV: { href: string; label: string; match: (p: string) => boolean; manager
   { href: "/admin/forms", label: "Formularios", match: (p) => p.startsWith("/admin/forms"), managers: true },
   { href: "/admin/equipo", label: "Equipo", match: (p) => p.startsWith("/admin/equipo") },
   { href: "/admin/actividad", label: "Actividad", match: (p) => p.startsWith("/admin/actividad"), managers: true },
+  { href: "/admin/marca", label: "Marca", match: (p) => p.startsWith("/admin/marca"), managers: true },
 ];
 
 // Pages reachable without a session: sign in, forgotten password, set password from a link.

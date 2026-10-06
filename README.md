@@ -100,6 +100,7 @@ Entra en http://localhost:3000/admin con la cuenta inicial: `ADMIN_EMAIL` / `ADM
 - **Actividad** (`/admin/actividad`): historial de auditoría de toda la organización, de envíos y del equipo.
 - **Contraseñas**: "¿Olvidaste tu contraseña?" en el login envía un enlace de 1 hora; en **Mi cuenta** (`/admin/cuenta`, clic en tu nombre) se cambia la propia.
 - **Aprobaciones en varios niveles** (Formularios → Aprobaciones, `/admin/forms/{id}/aprobaciones`): hasta 5 pasos en orden (p. ej. Comercial → Cumplimiento), cada uno con aprobadores opcionales. El envío queda aprobado cuando firma el último paso; una persona firma como máximo un paso, y pedir correcciones o reabrir reinicia el flujo. La bandeja muestra el paso pendiente y el detalle quién firmó cada uno.
+- **Marca** (`/admin/marca`, owners y admins): nombre de la organización, color principal (con chequeo de contraste), logo y email de contacto. El portal los muestra en la cabecera, los botones y el pie, y todos los correos salen también en HTML con esa marca.
 - **Emails al solicitante** en cada cambio de estado: cuando se toma para revisión, se piden correcciones, se aprueba o se rechaza.
 - **Sesiones** propias en Go: contraseñas con argon2id, sesión en Postgres y cookie httpOnly. El navegador habla con la API a través de `/api/v1` en el mismo dominio de Next.js, así la cookie es de primera parte. Activa `COOKIE_SECURE=true` detrás de HTTPS.
 
