@@ -24,6 +24,35 @@ export type UploadedFile = {
   uploadedAt: string;
 };
 
+/** A finished liveness attempt; "pass" and "review" complete the field. */
+export type LivenessDecision = "pass" | "review" | "retry" | "fail" | "expired" | "error";
+export type LivenessAttempt = {
+  id: string;
+  fieldKey: string;
+  decision: LivenessDecision;
+  reasons: string[];
+  completedAt: string | null;
+};
+export type LivenessStep = "center" | "left" | "right" | "closer";
+export type LivenessChallenge = {
+  id: string;
+  steps: LivenessStep[];
+  stepMs: number;
+  framesPerStep: number;
+  expiresAt: string;
+  attemptsLeft: number;
+};
+export type LivenessResult = {
+  id: string;
+  fieldKey: string;
+  decision: LivenessDecision;
+  reasons: string[];
+  completed: boolean;
+  attemptsLeft: number;
+};
+
+export const livenessCompleted = (d: LivenessDecision) => d === "pass" || d === "review";
+
 export type ReviewComment = { id: string; fieldKey: string | null; body: string; createdAt: string };
 
 export type SubmissionView = {
@@ -34,6 +63,7 @@ export type SubmissionView = {
   data: Answers;
   schema: FormSchema;
   files: UploadedFile[];
+  liveness: LivenessAttempt[];
   comments: ReviewComment[];
   canEdit: boolean;
   editableFields: string[] | null;
@@ -80,6 +110,14 @@ export const portal = {
     request<{ savedAt: string }>(`/submission/data`, { method: "PUT", token, body: JSON.stringify({ data }) }),
   submit: (token: string, data: Answers) =>
     request<{ status: Status }>(`/submission/submit`, { method: "POST", token, body: JSON.stringify({ data }) }),
+  livenessChallenge: (token: string, fieldKey: string) =>
+    request<LivenessChallenge>(`/submission/liveness`, { method: "POST", token, body: JSON.stringify({ fieldKey }) }),
+  livenessFinish: (token: string, id: string, frames: { step: number; blob: Blob }[]) => {
+    const form = new FormData();
+    form.append("frameSteps", JSON.stringify(frames.map((f) => f.step)));
+    frames.forEach((f, i) => form.append("frames", f.blob, `${i}.jpg`));
+    return request<LivenessResult>(`/submission/liveness/${id}`, { method: "POST", token, body: form });
+  },
   deleteFile: (token: string, id: string) => request<void>(`/submission/files/${id}`, { method: "DELETE", token }),
 
   async fileBlob(token: string, id: string): Promise<Blob> {

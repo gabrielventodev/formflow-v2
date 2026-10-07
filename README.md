@@ -10,18 +10,19 @@ Sistema de preonboarding: los administradores crean formularios, las personas lo
 | Base de datos | PostgreSQL 17 nativo | migraciones en `api/migrations/` |
 | Frontend | Next.js + TypeScript + Tailwind | `web/` |
 | Archivos | Almacenamiento compatible con S3 (MinIO en local) | — |
+| Prueba de vida | Python + OpenCV (YuNet, SFace, MiniFASNet), sin servicios externos | `face/` (submódulo de [formsis-face](https://github.com/gabrielventodev/formsis-face)) |
 
 La API aplica las migraciones al arrancar. Postgres es la única base de datos: esquemas de formularios y respuestas viven en columnas JSONB, y los estados, comentarios y auditoría en tablas relacionales.
 
 ## Empezar
 
-La API vive en su propio repositorio, [formsis-backend](https://github.com/gabrielventodev/formsis-backend), y aquí entra como submódulo en `api/`. Clona con los submódulos:
+La API vive en su propio repositorio, [formsis-backend](https://github.com/gabrielventodev/formsis-backend), y aquí entra como submódulo en `api/`. El servicio de prueba de vida, [formsis-face](https://github.com/gabrielventodev/formsis-face), entra en `face/`. Clona con los submódulos:
 
 ```sh
 git clone --recurse-submodules https://github.com/gabrielventodev/formflow-v2.git
 ```
 
-Si ya lo tenías clonado, trae la carpeta `api/` con:
+Si ya lo tenías clonado, trae las carpetas `api/` y `face/` con:
 
 ```sh
 git submodule update --init
@@ -134,10 +135,11 @@ Configuración (variables de la API):
 | `MAX_UPLOAD_MB` | Tope por archivo, aunque el campo permita más | `25` |
 | `WEB_PUBLIC_URL` | URL pública de la web para los enlaces de los emails | `WEB_ORIGIN` |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM` | Envío de emails. Sin `SMTP_HOST`, los emails se escriben en el log de la API (útil para copiar el enlace en desarrollo) | — |
+| `FACE_URL`, `FACE_TOKEN` | Servicio de prueba de vida (`face/`). Sin `FACE_URL`, el campo "Prueba de vida" responde que la verificación no está disponible | — |
 
 Con `make up`, la API usa el MinIO del compose.
 
-API pública (`/api/v1/portal`): `GET /links/{token}`, `POST /links/{token}/start`, `POST /resume`; y con `Authorization: Bearer {token}`: `GET /submission`, `PUT /submission/data`, `POST /submission/validate`, `POST /submission/submit`, `POST /submission/files`, `GET|DELETE /submission/files/{id}`. Enlaces (admin): `GET /api/v1/admin/links?formId=`, `POST /api/v1/admin/links`, `DELETE /api/v1/admin/links/{id}`.
+API pública (`/api/v1/portal`): `GET /links/{token}`, `POST /links/{token}/start`, `POST /resume`; y con `Authorization: Bearer {token}`: `GET /submission`, `PUT /submission/data`, `POST /submission/validate`, `POST /submission/submit`, `POST /submission/files`, `GET|DELETE /submission/files/{id}`, `POST /submission/liveness` (pide un desafío) y `POST /submission/liveness/{id}` (envía los fotogramas). Enlaces (admin): `GET /api/v1/admin/links?formId=`, `POST /api/v1/admin/links`, `DELETE /api/v1/admin/links/{id}`.
 
 ## Pruebas
 

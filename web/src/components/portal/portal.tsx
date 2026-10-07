@@ -5,10 +5,21 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { FieldInput } from "@/components/form-renderer";
 import { FileField } from "@/components/portal/file-field";
+import { LivenessField } from "@/components/portal/liveness-field";
 import { Button } from "@/components/ui";
 import { SignatureView } from "@/components/signature-pad";
 import { evaluate, formatAnswer, hasAnswer, validateAnswer, type Answers, type Field, type FormSchema, type Section } from "@/lib/form-schema";
-import { ApiError, portal, statusLabel, type Errors, type ReviewComment, type SubmissionView, type UploadedFile } from "@/lib/portal-api";
+import {
+  ApiError,
+  livenessCompleted,
+  portal,
+  statusLabel,
+  type Errors,
+  type LivenessAttempt,
+  type ReviewComment,
+  type SubmissionView,
+  type UploadedFile,
+} from "@/lib/portal-api";
 import { cn, formatDate } from "@/lib/utils";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -19,6 +30,7 @@ export function Portal({ token }: { token: string }) {
   const [loadError, setLoadError] = useState<ApiError | null>(null);
   const [answers, setAnswers] = useState<Answers>({});
   const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [liveness, setLiveness] = useState<LivenessAttempt[]>([]);
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<Errors>({});
   const [save, setSave] = useState<SaveState>("idle");
@@ -39,6 +51,7 @@ export function Portal({ token }: { token: string }) {
       answersRef.current = v.data ?? {};
       setAnswers(answersRef.current);
       setFiles(v.files);
+      setLiveness(v.liveness ?? []);
       setSavedAt(v.updatedAt);
     } catch (e) {
       setLoadError(e instanceof ApiError ? e : new ApiError(0, "No pudimos cargar tu solicitud."));
@@ -91,11 +104,13 @@ export function Portal({ token }: { token: string }) {
     timer.current = setTimeout(() => void flush(), 800);
   };
 
+  // Uploaded files per file field and completed checks per liveness field, as the server counts them.
   const fileCounts = useMemo(() => {
     const c: Record<string, number> = {};
     for (const f of files) c[f.fieldKey] = (c[f.fieldKey] ?? 0) + 1;
+    for (const l of liveness) if (livenessCompleted(l.decision)) c[l.fieldKey] = (c[l.fieldKey] ?? 0) + 1;
     return c;
-  }, [files]);
+  }, [files, liveness]);
 
   if (loadError) return <LoadErrorCard error={loadError} />;
   if (!view) {
@@ -113,7 +128,7 @@ export function Portal({ token }: { token: string }) {
     return (
       <div className="space-y-6">
         <StatusCard view={view} justSubmitted={justSubmitted} />
-        <Summary schema={schema} answers={answers} files={files} />
+        <Summary schema={schema} answers={answers} files={files} done={fileCounts} />
       </div>
     );
   }
@@ -252,6 +267,18 @@ export function Portal({ token }: { token: string }) {
                             onDeleted={(id) => setFiles((fs) => fs.filter((x) => x.id !== id))}
                           />
                         )}
+                        renderLiveness={(field) => (
+                          <LivenessField
+                            token={token}
+                            field={field}
+                            disabled={locked}
+                            attempts={liveness.filter((l) => l.fieldKey === field.key)}
+                            onFinished={(a) => {
+                              setLiveness((ls) => [...ls, a]);
+                              if (livenessCompleted(a.decision)) setErrors((e) => ({ ...e, [field.key]: "" }));
+                            }}
+                          />
+                        )}
                       />
                     </div>
                   );
@@ -262,7 +289,7 @@ export function Portal({ token }: { token: string }) {
           <div>
             <h2 className="mb-1 text-lg font-semibold">Revisa y envía</h2>
             <p className="mb-5 text-sm text-zinc-600">Confirma que todo esté correcto. Después de enviar no podrás editar salvo que te pidamos correcciones.</p>
-            <Summary schema={schema} answers={answers} files={files} onEdit={(i) => goTo(i)} sections={sections} />
+            <Summary schema={schema} answers={answers} files={files} done={fileCounts} onEdit={(i) => goTo(i)} sections={sections} />
             {submitError && <p className="mt-4 text-sm text-red-600">{submitError}</p>}
           </div>
         )}
@@ -302,6 +329,7 @@ export function validateSection(section: Section, answers: Answers, files: Recor
   const check = (f: Field, v: unknown, path: string) => {
     let msg: string | null;
     if (f.type === "file") msg = f.required && !files[path] ? "Adjunta un archivo" : null;
+    else if (f.type === "liveness") msg = f.required && !files[path] ? "Completa la verificación con tu cámara" : null;
     else if (f.type === "repeater" && (!Array.isArray(v) || v.length === 0) && (f.min ?? 0) > 0)
       msg = `Agrega al menos ${f.min}`;
     else if (f.type === "select" && typeof v === "string" && v !== "" && !f.options?.includes(v)) msg = "Opción no válida";
@@ -387,18 +415,24 @@ function Summary({
   schema,
   answers,
   files,
+  done,
   sections,
   onEdit,
 }: {
   schema: FormSchema;
   answers: Answers;
   files: UploadedFile[];
+  done: Record<string, number>;
   sections?: Section[];
   onEdit?: (i: number) => void;
 }) {
   const list = sections ?? schema.sections.filter((s) => evaluate(s.showIf, answers));
   const fileNames = (path: string) => files.filter((f) => f.fieldKey === path).map((f) => f.filename).join(", ") || "—";
-  const value = (f: Field, v: unknown, path: string): ReactNode => (f.type === "file" ? fileNames(path) : display(f, v));
+  const value = (f: Field, v: unknown, path: string): ReactNode => {
+    if (f.type === "file") return fileNames(path);
+    if (f.type === "liveness") return done[path] ? "Verificación completada" : "—";
+    return display(f, v);
+  };
 
   return (
     <div className="space-y-4">

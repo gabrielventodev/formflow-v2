@@ -2,3 +2,7 @@
 	path = api
 	url = https://github.com/gabrielventodev/formsis-backend.git
 	branch = main
+[submodule "face"]
+	path = face
+	url = https://github.com/gabrielventodev/formsis-face.git
+	branch = main

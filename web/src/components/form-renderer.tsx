@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { Button, Checkbox, Input, Select, Textarea } from "@/components/ui";
 import { SignaturePad } from "@/components/signature-pad";
+import { LivenessPreview } from "@/components/portal/liveness-field";
 import {
   ADDRESS_PARTS,
   FREQUENT_COUNTRIES,
@@ -64,7 +65,7 @@ export function FormRenderer({
   const next = () => {
     const errs: Record<string, string> = {};
     for (const f of current.fields) {
-      if (!evaluate(f.showIf, answers)) continue;
+      if (!evaluate(f.showIf, answers) || f.type === "liveness") continue; // no camera in the preview
       const err = validateAnswer(f, answers[f.key]);
       if (err) errs[f.key] = err;
       if (f.type === "repeater" && Array.isArray(answers[f.key])) {
@@ -136,8 +137,8 @@ export function FormRenderer({
 }
 
 /**
- * One field of the form. The filling portal passes `renderFile` to plug in real uploads and
- * `disabled` to lock fields a reviewer did not flag.
+ * One field of the form. The filling portal passes `renderFile` and `renderLiveness` to plug in
+ * real uploads and the camera check, and `disabled` to lock fields a reviewer did not flag.
  */
 export function FieldInput({
   field: f,
@@ -148,6 +149,7 @@ export function FieldInput({
   errorPrefix,
   disabled,
   renderFile,
+  renderLiveness,
   note,
 }: {
   field: Field;
@@ -158,6 +160,7 @@ export function FieldInput({
   errorPrefix: string;
   disabled?: boolean;
   renderFile?: (field: Field, path: string) => ReactNode;
+  renderLiveness?: (field: Field) => ReactNode;
   note?: ReactNode;
 }) {
   const id = `f-${errorPrefix}`;
@@ -261,6 +264,9 @@ export function FieldInput({
       break;
     case "address":
       input = <AddressInput id={id} value={value} disabled={disabled} onChange={onChange} />;
+      break;
+    case "liveness":
+      input = renderLiveness ? renderLiveness(f) : <LivenessPreview />;
       break;
     case "signature":
       input = <SignaturePad id={id} value={str} disabled={disabled} onChange={(p) => onChange(p || undefined)} />;
