@@ -3,8 +3,9 @@ import type { Answers, FormSchema } from "./form-schema";
 
 export type Errors = Record<string, string>;
 
-export const PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
-const BASE = `${PUBLIC_API_URL}/api/v1/portal`;
+// Goes through the web's same-origin proxy (/api/v1/[...path]), so it works from any host (tunnels, phones)
+// without CORS or exposing the API.
+const BASE = "/api/v1/portal";
 
 export type Status = "draft" | "submitted" | "in_review" | "changes_requested" | "approved" | "rejected";
 
@@ -100,13 +101,13 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init: RequestInit & { token?: string } = {}, base = BASE): Promise<T> {
+async function request<T>(path: string, init: RequestInit & { token?: string } = {}): Promise<T> {
   const headers = new Headers(init.headers);
   if (init.token) headers.set("Authorization", `Bearer ${init.token}`);
   if (init.body && !(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
   let res: Response;
   try {
-    res = await fetch(`${base}${path}`, { ...init, headers, cache: "no-store" });
+    res = await fetch(`${BASE}${path}`, { ...init, headers, cache: "no-store" });
   } catch {
     throw new ApiError(0, "No pudimos conectarnos. Revisa tu conexión e intenta de nuevo.");
   }
@@ -177,15 +178,12 @@ function framesForm(frames: CapturedFrame[]) {
   return form;
 }
 
-// The phone goes through the web's same-origin proxy: it can't reach an API URL like localhost:8080.
-const PHONE_BASE = "/api/v1/portal";
-
 /** Calls a phone makes with the token from the QR. */
 export const phone = {
-  info: (token: string) => request<HandoffInfo>(`/handoff`, { token }, PHONE_BASE),
-  challenge: (token: string) => request<LivenessChallenge>(`/handoff/liveness`, { method: "POST", token }, PHONE_BASE),
+  info: (token: string) => request<HandoffInfo>(`/handoff`, { token }),
+  challenge: (token: string) => request<LivenessChallenge>(`/handoff/liveness`, { method: "POST", token }),
   finish: (token: string, id: string, frames: CapturedFrame[]) =>
-    request<LivenessResult>(`/handoff/liveness/${id}`, { method: "POST", token, body: framesForm(frames) }, PHONE_BASE),
+    request<LivenessResult>(`/handoff/liveness/${id}`, { method: "POST", token, body: framesForm(frames) }),
 };
 
 export const statusLabel: Record<Status, string> = {
