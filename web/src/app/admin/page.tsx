@@ -183,7 +183,14 @@ function Inbox() {
                 <td className="px-4 py-3">
                   {s.form_title} <span className="text-xs text-zinc-400">v{s.version_number}</span>
                 </td>
-                <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
+                <td className="px-4 py-3">
+                  <StatusBadge status={s.status} />
+                  {s.approval_step && (
+                    <div className="mt-1 whitespace-nowrap text-xs text-zinc-500">
+                      Paso {s.approval_step.index + 1}/{s.approval_step.total}: {s.approval_step.name}
+                    </div>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-zinc-600">{s.assigned_to ? s.assigned_to.name || s.assigned_to.email : "—"}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-zinc-600">{formatDate(s.submitted_at ?? s.created_at)}</td>
               </tr>

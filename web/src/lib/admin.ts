@@ -21,7 +21,30 @@ export const STATUS_STYLE: Record<Status, string> = {
   rejected: "bg-rose-100 text-rose-800",
 };
 
-export type Me = { id: string; email: string; name: string; organization_id: string; role: "owner" | "admin" | "reviewer" };
+export type Role = "owner" | "admin" | "reviewer";
+export type Me = { id: string; email: string; name: string; organization_id: string; role: Role };
+
+export const ROLE_LABEL: Record<Role, string> = { owner: "Propietario", admin: "Administrador", reviewer: "Revisor" };
+
+// Owners and admins build forms, share links, manage the team and see the activity log.
+export function canManage(role: Role): boolean {
+  return role === "owner" || role === "admin";
+}
+
+export type Member = {
+  id: string;
+  email: string;
+  name: string;
+  role: Role;
+  active: boolean;
+  pending: boolean;
+  created_at: string;
+  last_login_at: string | null;
+};
+
+export type ActivityRow = EventRow & {
+  submission: { id: string; applicant: string; form_title: string } | null;
+};
 export type UserRef = { id: string; name: string; email: string };
 
 export type SubmissionRow = {
@@ -37,6 +60,8 @@ export type SubmissionRow = {
   decided_at: string | null;
   created_at: string;
   updated_at: string;
+  // Pending step of the form's approval flow while the submission is open.
+  approval_step: { index: number; total: number; name: string } | null;
 };
 
 export type SubmissionList = {
@@ -78,7 +103,25 @@ export type EventRow = {
   created_at: string;
 };
 
+export type ApprovalStepView = { name: string; approvers: UserRef[] };
+export type ApprovalRow = {
+  step: number;
+  step_name: string;
+  user: UserRef;
+  comment: string;
+  created_at: string;
+  invalidated_at: string | null;
+};
+export type ApprovalState = {
+  steps: ApprovalStepView[];
+  current: number;
+  approvals: ApprovalRow[];
+  can_approve: boolean;
+  reason?: string;
+};
+
 export type SubmissionDetail = {
+  approval: ApprovalState | null;
   submission: SubmissionRow;
   data: Record<string, unknown>;
   schema: FormSchema;
@@ -139,10 +182,63 @@ export const ACTION_LABEL: Record<string, string> = {
   commented: "Comentó",
   comment_resolved: "Marcó un comentario como resuelto",
   assigned: "Cambió el revisor",
+  step_approved: "Aprobó el paso",
   // Portal-side actions (actor_type applicant)
   "submission.created": "Empezó a llenar el formulario",
   "submission.submitted": "Envió el formulario",
   "submission.resubmitted": "Reenvió con correcciones",
   "file.uploaded": "Subió un documento",
   "file.deleted": "Eliminó un documento",
+  // Team changes (no submission attached)
+  "member.invited": "Invitó a",
+  "member.link_sent": "Envió un enlace de contraseña a",
+  "member.role_changed": "Cambió el rol de",
+  "member.deactivated": "Desactivó a",
+  "member.reactivated": "Reactivó a",
+  "member.updated": "Editó a",
+  "form.approval_flow_updated": "Cambió el flujo de aprobación de",
+  "organization.updated": "Cambió la marca de la organización",
+  "webhook.created": "Creó el webhook",
+  "webhook.updated": "Editó el webhook",
+  "webhook.deleted": "Eliminó el webhook",
+  "webhook.secret_rotated": "Rotó el secreto del webhook",
+};
+
+export type Webhook = {
+  id: string;
+  url: string;
+  description: string;
+  events: string[];
+  include_data: boolean;
+  active: boolean;
+  secret_hint: string;
+  created_at: string;
+  secret?: string; // only right after create or rotate
+  last_delivery: { status: DeliveryStatus; event: string; at: string } | null;
+  failing: number;
+};
+
+export type DeliveryStatus = "pending" | "succeeded" | "failed";
+
+export type Delivery = {
+  id: string;
+  event: string;
+  status: DeliveryStatus;
+  attempts: number;
+  last_status_code: number | null;
+  last_error: string;
+  created_at: string;
+  last_attempt_at: string | null;
+  next_attempt_at: string | null;
+  payload?: unknown;
+};
+
+export const WEBHOOK_EVENT_LABEL: Record<string, string> = {
+  "submission.submitted": "Envío recibido",
+  "submission.in_review": "En revisión",
+  "submission.step_approved": "Paso de aprobación firmado",
+  "submission.changes_requested": "Correcciones pedidas",
+  "submission.approved": "Aprobado",
+  "submission.rejected": "Rechazado",
+  ping: "Prueba",
 };

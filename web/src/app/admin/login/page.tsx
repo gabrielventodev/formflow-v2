@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import Link from "next/link";
 import {
   ArrowRight,
   CircleAlert,
@@ -17,42 +17,13 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { adminFetch, ApiError } from "@/lib/admin";
-
-// Design system from UI UX Pro Max ("B2B SaaS onboarding compliance admin login"):
-// glassmorphism on a light canvas, trust blue primary, Plus Jakarta Sans, subtle motion.
-const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+import { Backdrop, jakarta, Logo } from "@/components/admin/auth-layout";
 
 const HIGHLIGHTS = [
   { icon: Inbox, title: "Bandeja de envíos", text: "Cada solicitud con sus datos y documentos en un solo lugar." },
   { icon: FileCheck2, title: "Observaciones por campo", text: "Pide correcciones puntuales y el solicitante recibe un enlace nuevo." },
   { icon: LayoutTemplate, title: "Formularios propios", text: "Crea y versiona tus formularios sin tocar código." },
 ];
-
-function Logo() {
-  return (
-    <div className="flex items-center gap-2.5">
-      <span
-        aria-hidden
-        className="grid size-10 place-items-center rounded-xl bg-blue-600 text-sm font-bold text-white shadow-lg shadow-blue-600/30"
-      >
-        FF
-      </span>
-      <span className="text-lg font-bold tracking-tight text-slate-900">FormFlow</span>
-    </div>
-  );
-}
-
-function Backdrop() {
-  // Vibrant layered background the frosted card sits on. Decorative only.
-  return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div className="absolute -left-40 -top-40 size-[520px] rounded-full bg-blue-400/40 blur-3xl" />
-      <div className="absolute -right-32 top-1/3 size-[440px] rounded-full bg-sky-300/40 blur-3xl" />
-      <div className="absolute -bottom-48 left-1/3 size-[480px] rounded-full bg-orange-300/30 blur-3xl" />
-      <div className="absolute inset-0 opacity-[0.35] [background-image:radial-gradient(rgb(148_163_184/0.5)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
-    </div>
-  );
-}
 
 function Intro() {
   return (
@@ -232,7 +203,9 @@ function LoginForm() {
       </button>
 
       <p className="mt-6 text-center text-sm leading-relaxed text-slate-600">
-        ¿Olvidaste tu contraseña? Pide a un propietario de tu organización que la restablezca.
+        <Link href="/admin/olvide" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
+          ¿Olvidaste tu contraseña?
+        </Link>
       </p>
 
       <p className="mt-6 flex items-center justify-center gap-1.5 border-t border-slate-200/80 pt-5 text-xs text-slate-600">
