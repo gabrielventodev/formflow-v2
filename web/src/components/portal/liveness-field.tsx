@@ -1,14 +1,29 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Camera, CheckCircle2, Loader2, ScanFace, ZoomIn } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Camera,
+  CheckCircle2,
+  Copy,
+  Loader2,
+  ScanFace,
+  Smartphone,
+  ZoomIn,
+} from "lucide-react";
+import QRCode from "qrcode";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Button } from "@/components/ui";
 import type { Field } from "@/lib/form-schema";
 import {
   ApiError,
   livenessCompleted,
   portal,
+  type CapturedFrame,
+  type HandoffStatus,
   type LivenessAttempt,
+  type LivenessChallenge,
+  type LivenessHandoff,
   type LivenessResult,
   type LivenessStep,
 } from "@/lib/portal-api";
@@ -34,9 +49,29 @@ const REASON_TEXT: Record<string, string> = {
 };
 const GENERIC_RETRY = "No pudimos confirmar la verificación. Inténtalo de nuevo de frente a la cámara y con buena luz.";
 
+export const retryMessage = (a: { decision: string; reasons: string[] }) =>
+  a.decision === "retry" ? (REASON_TEXT[a.reasons[0]] ?? GENERIC_RETRY) : GENERIC_RETRY;
+
 // Time to react to each instruction before frames are taken.
 const REACTION_MS = 900;
 const MAX_WIDTH = 640;
+const POLL_MS = 2000;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** Phones and tablets take the check here; computers hand it off to a phone with a QR. */
+function isHandheld() {
+  const nav = navigator as Navigator & { userAgentData?: { mobile: boolean } };
+  if (nav.userAgentData?.mobile) return true;
+  if (/Android|iPhone|iPad|iPod|Mobile/i.test(nav.userAgent)) return true;
+  // iPadOS reports itself as a Mac.
+  return /Macintosh/.test(nav.userAgent) && nav.maxTouchPoints > 1;
+}
+const noSubscribe = () => () => {};
+/** null while rendering on the server. */
+function useHandheld(): boolean | null {
+  return useSyncExternalStore(noSubscribe, isHandheld, () => null);
+}
 
 type Phase =
   | { kind: "idle" }
@@ -45,29 +80,27 @@ type Phase =
   | { kind: "checking" }
   | { kind: "failed"; message: string; attemptsLeft?: number };
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
 /**
- * Liveness field of the filling portal: opens the front camera, walks the applicant through a
- * random challenge from the server, takes a few frames per step and sends them to be checked.
+ * The camera part of a liveness check: opens the front camera, walks the person through a random
+ * challenge from the server, takes a few frames per step and sends them to be checked.
  */
-export function LivenessField({
-  token,
-  field,
-  attempts,
+export function LivenessCamera({
+  start,
+  finish,
   disabled,
-  onFinished,
+  onResult,
+  idleExtra,
 }: {
-  token: string;
-  field: Field;
-  attempts: LivenessAttempt[];
+  start: () => Promise<LivenessChallenge>;
+  finish: (id: string, frames: CapturedFrame[]) => Promise<LivenessResult>;
   disabled?: boolean;
-  onFinished: (attempt: LivenessAttempt) => void;
+  onResult: (result: LivenessResult) => void;
+  /** Shown under the start button, e.g. a way to switch to the phone. */
+  idleExtra?: ReactNode;
 }) {
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
-  const done = attempts.some((a) => livenessCompleted(a.decision));
 
   const stopCamera = () => {
     stream.current?.getTracks().forEach((t) => t.stop());
@@ -108,8 +141,8 @@ export function LivenessField({
 
     let result: LivenessResult;
     try {
-      const ch = await portal.livenessChallenge(token, field.key);
-      const frames: { step: number; blob: Blob }[] = [];
+      const ch = await start();
+      const frames: CapturedFrame[] = [];
       const gap = (ch.stepMs - REACTION_MS) / ch.framesPerStep;
       for (let i = 0; i < ch.steps.length; i++) {
         setPhase({ kind: "running", step: ch.steps[i], index: i, total: ch.steps.length });
@@ -122,32 +155,19 @@ export function LivenessField({
       }
       stopCamera();
       setPhase({ kind: "checking" });
-      result = await portal.livenessFinish(token, ch.id, frames);
+      result = await finish(ch.id, frames);
     } catch (e) {
       stopCamera();
       setPhase({ kind: "failed", message: e instanceof ApiError ? e.message : "No pudimos verificar ahora. Intenta de nuevo." });
       return;
     }
 
-    onFinished({ id: result.id, fieldKey: result.fieldKey, decision: result.decision, reasons: result.reasons, completedAt: new Date().toISOString() });
-    if (result.completed) {
-      setPhase({ kind: "idle" });
-    } else {
-      const message =
-        result.decision === "retry" ? REASON_TEXT[result.reasons[0]] ?? GENERIC_RETRY : GENERIC_RETRY;
-      setPhase({ kind: "failed", message, attemptsLeft: result.attemptsLeft });
-    }
+    onResult(result);
+    if (result.completed) setPhase({ kind: "idle" });
+    else setPhase({ kind: "failed", message: retryMessage(result), attemptsLeft: result.attemptsLeft });
   };
 
   const active = phase.kind === "starting" || phase.kind === "running" || phase.kind === "checking";
-
-  if (done && !active) {
-    return (
-      <div id={`f-${field.key}`} tabIndex={-1} className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800">
-        <CheckCircle2 className="h-4 w-4" /> Verificación completada
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-3">
@@ -184,7 +204,7 @@ export function LivenessField({
       </div>
 
       {!active && (
-        <div id={`f-${field.key}`} tabIndex={-1} className="rounded-md border border-zinc-200 bg-zinc-50 p-4 text-sm">
+        <div className="rounded-md border border-zinc-200 bg-zinc-50 p-4 text-sm">
           {phase.kind === "failed" ? (
             <p className="mb-3 text-red-700">
               {phase.message}
@@ -205,7 +225,237 @@ export function LivenessField({
             <Camera className="h-4 w-4" />
             {phase.kind === "failed" ? "Intentar de nuevo" : "Iniciar verificación"}
           </Button>
+          {idleExtra}
         </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Liveness field of the filling portal. On a phone or tablet the camera opens right here; on a
+ * computer the applicant scans a QR and takes the check on their phone while this page waits.
+ */
+export function LivenessField({
+  token,
+  field,
+  attempts,
+  disabled,
+  onFinished,
+}: {
+  token: string;
+  field: Field;
+  attempts: LivenessAttempt[];
+  disabled?: boolean;
+  onFinished: (attempt: LivenessAttempt) => void;
+}) {
+  const handheld = useHandheld();
+  const [useThisComputer, setUseThisComputer] = useState(false);
+  const done = attempts.some((a) => livenessCompleted(a.decision));
+
+  if (done) {
+    return (
+      <div id={`f-${field.key}`} tabIndex={-1} className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800">
+        <CheckCircle2 className="h-4 w-4" /> Verificación completada
+      </div>
+    );
+  }
+  if (handheld === null) return <div id={`f-${field.key}`} tabIndex={-1} className="h-24 rounded-md border border-zinc-200 bg-zinc-50" />;
+
+  if (handheld || useThisComputer) {
+    return (
+      <div id={`f-${field.key}`} tabIndex={-1}>
+        <LivenessCamera
+          disabled={disabled}
+          start={() => portal.livenessChallenge(token, field.key)}
+          finish={(id, frames) => portal.livenessFinish(token, id, frames)}
+          onResult={(r) =>
+            onFinished({ id: r.id, fieldKey: r.fieldKey, decision: r.decision, reasons: r.reasons, completedAt: new Date().toISOString() })
+          }
+          idleExtra={
+            !handheld && (
+              <button type="button" onClick={() => setUseThisComputer(false)} className="mt-3 block text-xs text-zinc-500 underline">
+                Mejor uso mi celular
+              </button>
+            )
+          }
+        />
+      </div>
+    );
+  }
+  return (
+    <PhoneHandoff
+      token={token}
+      field={field}
+      disabled={disabled}
+      onFinished={onFinished}
+      onUseThisComputer={() => setUseThisComputer(true)}
+    />
+  );
+}
+
+type Handoff = LivenessHandoff & { qr: string };
+
+/** Computer side: shows the QR and follows what the phone does until the check completes. */
+function PhoneHandoff({
+  token,
+  field,
+  disabled,
+  onFinished,
+  onUseThisComputer,
+}: {
+  token: string;
+  field: Field;
+  disabled?: boolean;
+  onFinished: (attempt: LivenessAttempt) => void;
+  onUseThisComputer: () => void;
+}) {
+  const [handoff, setHandoff] = useState<Handoff | null>(null);
+  const [status, setStatus] = useState<HandoffStatus | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+  // Latest callback without restarting the polling loop.
+  const finished = useRef(onFinished);
+  useEffect(() => {
+    finished.current = onFinished;
+  });
+
+  const create = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      const h = await portal.livenessHandoff(token, field.key);
+      const qr = await QRCode.toDataURL(h.url, { margin: 1, width: 480, errorCorrectionLevel: "M" });
+      setStatus(null);
+      setHandoff({ ...h, qr });
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "No pudimos generar el código. Intenta de nuevo.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!handoff) return;
+    let stop = false;
+    const seen = new Set<string>();
+    const poll = async () => {
+      while (!stop) {
+        try {
+          const st = await portal.handoffStatus(token, handoff.id);
+          if (stop) return;
+          setStatus(st);
+          for (const a of st.attempts) {
+            if (seen.has(a.id)) continue;
+            seen.add(a.id);
+            finished.current(a);
+          }
+          if (st.expired) return;
+        } catch {
+          // Keep polling through brief network errors.
+        }
+        await sleep(POLL_MS);
+      }
+    };
+    poll();
+    return () => {
+      stop = true;
+    };
+  }, [handoff, token]);
+
+  const copy = async () => {
+    if (!handoff) return;
+    try {
+      await navigator.clipboard.writeText(handoff.url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard can be blocked; the QR still works.
+    }
+  };
+
+  const last = status?.attempts.at(-1);
+  const outOfAttempts = status?.attemptsLeft === 0 && !status.checking;
+
+  return (
+    <div id={`f-${field.key}`} tabIndex={-1} className="rounded-md border border-zinc-200 bg-zinc-50 p-4 text-sm">
+      {!handoff ? (
+        <>
+          <p className="flex items-center gap-2 font-medium text-zinc-900">
+            <Smartphone className="h-4 w-4" /> Continúa en tu celular
+          </p>
+          <p className="mt-1 text-zinc-600">
+            La verificación se hace con la cámara frontal de tu celular. Te mostraremos un código QR para abrirla allí; esta
+            página se actualiza sola cuando termines.
+          </p>
+          {error && <p className="mt-2 text-red-700">{error}</p>}
+          <Button variant="primary" className="mt-3" onClick={create} disabled={disabled || busy}>
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Smartphone className="h-4 w-4" />}
+            Mostrar código QR
+          </Button>
+        </>
+      ) : status?.expired ? (
+        <>
+          <p className="text-zinc-700">El código venció. Genera otro para seguir desde tu celular.</p>
+          {error && <p className="mt-2 text-red-700">{error}</p>}
+          <Button variant="primary" className="mt-3" onClick={create} disabled={disabled || busy}>
+            {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+            Generar otro código
+          </Button>
+        </>
+      ) : (
+        <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+          {/* eslint-disable-next-line @next/next/no-img-element -- generated data URL */}
+          <img
+            src={handoff.qr}
+            alt="Código QR para abrir la verificación en tu celular"
+            className={cn("h-48 w-48 rounded-lg border border-zinc-200 bg-white p-2", status?.openedAt && "opacity-30")}
+          />
+          <div aria-live="polite" className="flex-1 space-y-2">
+            {status?.checking ? (
+              <p className="flex items-center gap-2 font-medium text-zinc-900">
+                <Loader2 className="h-4 w-4 animate-spin" /> Verificando en tu celular…
+              </p>
+            ) : last ? (
+              <>
+                <p className="text-red-700">{retryMessage(last)}</p>
+                <p className="text-zinc-600">
+                  {outOfAttempts ? "No te quedan intentos." : "Vuelve a intentarlo desde tu celular, ahí verás el botón para reintentar."}
+                </p>
+              </>
+            ) : status?.openedAt ? (
+              <p className="flex items-center gap-2 font-medium text-zinc-900">
+                <Smartphone className="h-4 w-4" /> Celular conectado. Sigue las instrucciones en tu celular.
+              </p>
+            ) : (
+              <>
+                <p className="font-medium text-zinc-900">Escanea este código con la cámara de tu celular</p>
+                <ol className="list-decimal space-y-0.5 pl-5 text-zinc-600">
+                  <li>Abre la cámara de tu celular y apunta al código.</li>
+                  <li>Toca el enlace que aparece y sigue las instrucciones.</li>
+                  <li>Cuando termines, esta página mostrará el resultado.</li>
+                </ol>
+                <p className="flex items-center gap-2 text-xs text-zinc-500">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Esperando al celular…
+                </p>
+              </>
+            )}
+            <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 text-xs text-zinc-500">
+              <button type="button" onClick={copy} className="inline-flex items-center gap-1 underline">
+                <Copy className="h-3 w-3" /> {copied ? "Enlace copiado" : "Copiar enlace"}
+              </button>
+              <button type="button" onClick={create} className="underline" disabled={busy}>
+                Generar otro código
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {!handoff && (
+        <button type="button" onClick={onUseThisComputer} className="mt-3 block text-xs text-zinc-500 underline">
+          No tengo celular, usar la cámara de este computador
+        </button>
       )}
     </div>
   );
@@ -220,7 +470,8 @@ export function LivenessPreview() {
       </p>
       <p className="mt-1">
         En el formulario real, el solicitante abre su cámara y sigue unas instrucciones al azar (mirar de frente, girar la
-        cabeza, acercarse). Así confirmamos que es una persona real y no una foto.
+        cabeza, acercarse). Así confirmamos que es una persona real y no una foto. Si llena el formulario en un computador,
+        le mostramos un código QR para hacerlo con su celular.
       </p>
     </div>
   );

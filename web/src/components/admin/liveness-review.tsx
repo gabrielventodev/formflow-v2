@@ -80,7 +80,10 @@ function Attempt({ submissionId, attempt: a }: { submissionId: string; attempt: 
     <div className="flex flex-col gap-2 text-sm text-zinc-800">
       <div className="flex flex-wrap items-center gap-2">
         <span className={`rounded px-2 py-0.5 text-xs font-medium ${d.className}`}>{d.label}</span>
-        <span className="text-xs text-zinc-500">{formatDate(a.completed_at ?? a.created_at)}</span>
+        <span className="text-xs text-zinc-500">
+          {formatDate(a.completed_at ?? a.created_at)}
+          {a.from_phone && " · desde el celular"}
+        </span>
       </div>
       <p className="text-xs text-zinc-600">{d.help}</p>
       {a.reasons.length > 0 && (

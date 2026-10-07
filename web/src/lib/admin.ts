@@ -148,6 +148,8 @@ export type LivenessRow = {
   best_frame: number | null;
   created_at: string;
   completed_at: string | null;
+  /** Taken on a phone through the QR shown on a computer. */
+  from_phone: boolean;
 };
 
 export type SubmissionDetail = {

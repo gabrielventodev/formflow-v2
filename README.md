@@ -133,13 +133,13 @@ Configuración (variables de la API):
 | `STORAGE_DIR` | Carpeta del driver local | `data/uploads` |
 | `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_REGION`, `S3_USE_SSL` | Bucket compatible con S3; se crea si no existe | `localhost:9000`, `formflow` |
 | `MAX_UPLOAD_MB` | Tope por archivo, aunque el campo permita más | `25` |
-| `WEB_PUBLIC_URL` | URL pública de la web para los enlaces de los emails | `WEB_ORIGIN` |
+| `WEB_PUBLIC_URL` | URL pública de la web para los enlaces de los emails y el QR de la prueba de vida. El celular debe poder abrirla y la cámara exige https | `WEB_ORIGIN` |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM` | Envío de emails. Sin `SMTP_HOST`, los emails se escriben en el log de la API (útil para copiar el enlace en desarrollo) | — |
 | `FACE_URL`, `FACE_TOKEN` | Servicio de prueba de vida (`face/`). Sin `FACE_URL`, el campo "Prueba de vida" responde que la verificación no está disponible | — |
 
 Con `make up`, la API usa el MinIO del compose.
 
-API pública (`/api/v1/portal`): `GET /links/{token}`, `POST /links/{token}/start`, `POST /resume`; y con `Authorization: Bearer {token}`: `GET /submission`, `PUT /submission/data`, `POST /submission/validate`, `POST /submission/submit`, `POST /submission/files`, `GET|DELETE /submission/files/{id}`, `POST /submission/liveness` (pide un desafío) y `POST /submission/liveness/{id}` (envía los fotogramas). Enlaces (admin): `GET /api/v1/admin/links?formId=`, `POST /api/v1/admin/links`, `DELETE /api/v1/admin/links/{id}`.
+API pública (`/api/v1/portal`): `GET /links/{token}`, `POST /links/{token}/start`, `POST /resume`; y con `Authorization: Bearer {token}`: `GET /submission`, `PUT /submission/data`, `POST /submission/validate`, `POST /submission/submit`, `POST /submission/files`, `GET|DELETE /submission/files/{id}`, `POST /submission/liveness` (pide un desafío), `POST /submission/liveness/{id}` (envía los fotogramas) y `POST /submission/liveness/handoff` + `GET /submission/liveness/handoff/{id}` (QR para hacerla con el celular, que abre `/v/{token}`). Enlaces (admin): `GET /api/v1/admin/links?formId=`, `POST /api/v1/admin/links`, `DELETE /api/v1/admin/links/{id}`.
 
 ## Pruebas
 

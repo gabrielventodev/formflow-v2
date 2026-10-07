@@ -274,7 +274,7 @@ export function Portal({ token }: { token: string }) {
                             disabled={locked}
                             attempts={liveness.filter((l) => l.fieldKey === field.key)}
                             onFinished={(a) => {
-                              setLiveness((ls) => [...ls, a]);
+                              setLiveness((ls) => (ls.some((l) => l.id === a.id) ? ls : [...ls, a]));
                               if (livenessCompleted(a.decision)) setErrors((e) => ({ ...e, [field.key]: "" }));
                             }}
                           />

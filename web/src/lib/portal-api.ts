@@ -53,6 +53,25 @@ export type LivenessResult = {
 
 export const livenessCompleted = (d: LivenessDecision) => d === "pass" || d === "review";
 
+/** A QR link that lets a phone take the liveness check of one field while the computer waits. */
+export type LivenessHandoff = { id: string; url: string; expiresAt: string };
+export type HandoffStatus = {
+  expiresAt: string;
+  expired: boolean;
+  openedAt: string | null;
+  /** The phone is in the middle of a challenge. */
+  checking: boolean;
+  attempts: LivenessAttempt[];
+  attemptsLeft: number;
+};
+/** What the phone sees when it opens the QR link. */
+export type HandoffInfo = {
+  form: { title: string };
+  field: { label: string; help?: string };
+  completed: boolean;
+  attemptsLeft: number;
+};
+
 export type ReviewComment = { id: string; fieldKey: string | null; body: string; createdAt: string };
 
 export type SubmissionView = {
@@ -81,13 +100,13 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init: RequestInit & { token?: string } = {}): Promise<T> {
+async function request<T>(path: string, init: RequestInit & { token?: string } = {}, base = BASE): Promise<T> {
   const headers = new Headers(init.headers);
   if (init.token) headers.set("Authorization", `Bearer ${init.token}`);
   if (init.body && !(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
   let res: Response;
   try {
-    res = await fetch(`${BASE}${path}`, { ...init, headers, cache: "no-store" });
+    res = await fetch(`${base}${path}`, { ...init, headers, cache: "no-store" });
   } catch {
     throw new ApiError(0, "No pudimos conectarnos. Revisa tu conexión e intenta de nuevo.");
   }
@@ -112,12 +131,11 @@ export const portal = {
     request<{ status: Status }>(`/submission/submit`, { method: "POST", token, body: JSON.stringify({ data }) }),
   livenessChallenge: (token: string, fieldKey: string) =>
     request<LivenessChallenge>(`/submission/liveness`, { method: "POST", token, body: JSON.stringify({ fieldKey }) }),
-  livenessFinish: (token: string, id: string, frames: { step: number; blob: Blob }[]) => {
-    const form = new FormData();
-    form.append("frameSteps", JSON.stringify(frames.map((f) => f.step)));
-    frames.forEach((f, i) => form.append("frames", f.blob, `${i}.jpg`));
-    return request<LivenessResult>(`/submission/liveness/${id}`, { method: "POST", token, body: form });
-  },
+  livenessFinish: (token: string, id: string, frames: CapturedFrame[]) =>
+    request<LivenessResult>(`/submission/liveness/${id}`, { method: "POST", token, body: framesForm(frames) }),
+  livenessHandoff: (token: string, fieldKey: string) =>
+    request<LivenessHandoff>(`/submission/liveness/handoff`, { method: "POST", token, body: JSON.stringify({ fieldKey }) }),
+  handoffStatus: (token: string, id: string) => request<HandoffStatus>(`/submission/liveness/handoff/${id}`, { token }),
   deleteFile: (token: string, id: string) => request<void>(`/submission/files/${id}`, { method: "DELETE", token }),
 
   async fileBlob(token: string, id: string): Promise<Blob> {
@@ -148,6 +166,26 @@ export const portal = {
       xhr.send(form);
     });
   },
+};
+
+export type CapturedFrame = { step: number; blob: Blob };
+
+function framesForm(frames: CapturedFrame[]) {
+  const form = new FormData();
+  form.append("frameSteps", JSON.stringify(frames.map((f) => f.step)));
+  frames.forEach((f, i) => form.append("frames", f.blob, `${i}.jpg`));
+  return form;
+}
+
+// The phone goes through the web's same-origin proxy: it can't reach an API URL like localhost:8080.
+const PHONE_BASE = "/api/v1/portal";
+
+/** Calls a phone makes with the token from the QR. */
+export const phone = {
+  info: (token: string) => request<HandoffInfo>(`/handoff`, { token }, PHONE_BASE),
+  challenge: (token: string) => request<LivenessChallenge>(`/handoff/liveness`, { method: "POST", token }, PHONE_BASE),
+  finish: (token: string, id: string, frames: CapturedFrame[]) =>
+    request<LivenessResult>(`/handoff/liveness/${id}`, { method: "POST", token, body: framesForm(frames) }, PHONE_BASE),
 };
 
 export const statusLabel: Record<Status, string> = {
