@@ -1,4 +1,4 @@
-# FormFlow
+# Formsis
 
 Sistema de preonboarding: los administradores crean formularios, las personas los completan desde un enlace y el equipo revisa y aprueba cada envío.
 
@@ -19,7 +19,7 @@ La API aplica las migraciones al arrancar. Postgres es la única base de datos: 
 La API vive en su propio repositorio, [formsis-backend](https://github.com/gabrielventodev/formsis-backend), y aquí entra como submódulo en `api/`. El servicio de prueba de vida, [formsis-face](https://github.com/gabrielventodev/formsis-face), entra en `face/`. Clona con los submódulos:
 
 ```sh
-git clone --recurse-submodules https://github.com/gabrielventodev/formflow-v2.git
+git clone --recurse-submodules https://github.com/gabrielventodev/formsis-v2.git
 ```
 
 Si ya lo tenías clonado, trae las carpetas `api/` y `face/` con:
@@ -51,7 +51,7 @@ Requisitos: Go 1.26+, Node 22+, Docker.
 
 ### Desde VS Code
 
-En **Run and Debug** elige **FormFlow: API + Web** y pulsa F5. Levanta Postgres con Docker, arranca la API en Go con el depurador (breakpoints incluidos) y Next.js en modo desarrollo, y abre el navegador al estar lista. También puedes lanzar **API (Go)** o **Web (Next.js)** por separado. Necesitas la extensión de Go (`golang.go`) con Delve; VS Code la sugiere al abrir el repo. Si la API no arranca, actualiza Go a 1.26 y ejecuta **Go: Install/Update Tools** para que Delve quede compilado con esa versión.
+En **Run and Debug** elige **Formsis: API + Web** y pulsa F5. Levanta Postgres con Docker, arranca la API en Go con el depurador (breakpoints incluidos) y Next.js en modo desarrollo, y abre el navegador al estar lista. También puedes lanzar **API (Go)** o **Web (Next.js)** por separado. Necesitas la extensión de Go (`golang.go`) con Delve; VS Code la sugiere al abrir el repo. Si la API no arranca, actualiza Go a 1.26 y ejecuta **Go: Install/Update Tools** para que Delve quede compilado con esa versión.
 
 ### Trabajar en la API (submódulo)
 
@@ -62,10 +62,10 @@ cd api
 git switch main
 git commit -am "..." && git push
 cd ..
-git add api && git commit -m "Actualiza la API"   # fija en formflow-v2 la nueva versión de la API
+git add api && git commit -m "Actualiza la API"   # fija en formsis-v2 la nueva versión de la API
 ```
 
-Para traer lo último de formsis-backend: `git submodule update --remote api` y luego `git add api` y commit. Al hacer `git pull` en formflow-v2, corre `git submodule update` para que `api/` quede en la versión fijada (o configura una vez `git config submodule.recurse true` y se hace solo).
+Para traer lo último de formsis-backend: `git submodule update --remote api` y luego `git add api` y commit. Al hacer `git pull` en formsis-v2, corre `git submodule update` para que `api/` quede en la versión fijada (o configura una vez `git config submodule.recurse true` y se hace solo).
 
 ## Constructor de formularios
 
@@ -91,7 +91,7 @@ Todas las rutas `/api/v1/admin/*` exigen sesión de administrador (ver abajo).
 
 ## Panel administrativo
 
-Entra en http://localhost:3000/admin con la cuenta inicial: `ADMIN_EMAIL` / `ADMIN_PASSWORD` (por defecto `admin@formflow.local` / `cambiame123`; la API la crea al arrancar si no existe). Para ver el panel con datos sin pasar por el portal: `make seed-envios`.
+Entra en http://localhost:3000/admin con la cuenta inicial: `ADMIN_EMAIL` / `ADMIN_PASSWORD` (por defecto `admin@formsis.local` / `cambiame123`; la API la crea al arrancar si no existe). Para ver el panel con datos sin pasar por el portal: `make seed-envios`.
 
 - **Bandeja de envíos** con pestañas (por revisar, asignados a mí, observados, aprobados, rechazados, todos), búsqueda por nombre, email o ID, filtros por formulario, revisor y fechas, y exportación a CSV con los mismos filtros (una columna por campo al filtrar por un formulario).
 - **Detalle** con las respuestas mostradas según la versión del formulario con que se llenaron, documentos para ver o descargar, comentarios generales y por campo, e historial de auditoría.
@@ -131,7 +131,7 @@ Configuración (variables de la API):
 |---|---|---|
 | `STORAGE_DRIVER` | `local` (carpeta) o `s3` (MinIO, R2, S3) | `local` |
 | `STORAGE_DIR` | Carpeta del driver local | `data/uploads` |
-| `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_REGION`, `S3_USE_SSL` | Bucket compatible con S3; se crea si no existe | `localhost:9000`, `formflow` |
+| `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_REGION`, `S3_USE_SSL` | Bucket compatible con S3; se crea si no existe | `localhost:9000`, `formsis` |
 | `MAX_UPLOAD_MB` | Tope por archivo, aunque el campo permita más | `25` |
 | `WEB_PUBLIC_URL` | URL pública de la web para los enlaces de los emails y el QR de la prueba de vida. El celular debe poder abrirla y la cámara exige https | `WEB_ORIGIN` |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM` | Envío de emails. Sin `SMTP_HOST`, los emails se escriben en el log de la API (útil para copiar el enlace en desarrollo) | — |
@@ -146,7 +146,7 @@ API pública (`/api/v1/portal`): `GET /links/{token}`, `POST /links/{token}/star
 ```sh
 make test
 # con Postgres local, también las pruebas de la API contra la base (no borran datos):
-TEST_DATABASE_URL=postgres://formflow:formflow@localhost:5432/formflow?sslmode=disable make test
+TEST_DATABASE_URL=postgres://formsis:formsis@localhost:5432/formsis?sslmode=disable make test
 ```
 
 ## Modelo de datos

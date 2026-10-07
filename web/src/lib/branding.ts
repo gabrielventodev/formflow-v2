@@ -6,7 +6,7 @@ export type Branding = {
   logo_url: string | null;
 };
 
-export const DEFAULT_BRANDING: Branding = { name: "FormFlow", primary_color: "#18181b", support_email: "", logo_url: null };
+export const DEFAULT_BRANDING: Branding = { name: "Formsis", primary_color: "#18181b", support_email: "", logo_url: null };
 
 const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 

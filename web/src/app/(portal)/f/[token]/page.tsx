@@ -1,6 +1,6 @@
 import { StartForm } from "@/components/portal/start-form";
 
-export const metadata = { title: "Completar formulario · FormFlow" };
+export const metadata = { title: "Completar formulario · Formsis" };
 
 export default async function FormLinkPage({ params }: PageProps<"/f/[token]">) {
   const { token } = await params;

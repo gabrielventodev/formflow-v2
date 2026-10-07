@@ -65,7 +65,7 @@ function Authenticated({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen flex-col bg-zinc-50 text-zinc-900">
         <header className="border-b border-zinc-200 bg-white">
           <div className="flex h-14 items-center gap-6 px-6">
-            <Link href="/admin" className="font-semibold">FormFlow</Link>
+            <Link href="/admin" className="font-semibold">Formsis</Link>
             <nav className="flex gap-1 overflow-x-auto text-sm">
               {NAV.filter((n) => !n.managers || canManage(me.role)).map((n) => (
                 <Link

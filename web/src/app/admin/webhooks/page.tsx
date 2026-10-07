@@ -125,9 +125,9 @@ export default function WebhooksPage() {
         <summary className="cursor-pointer font-medium text-zinc-800">Cómo verificar la firma</summary>
         <div className="mt-2 space-y-2">
           <p>
-            Cada aviso trae el encabezado <code>FormFlow-Signature: t=…,v1=…</code>. Calcula HMAC-SHA256 con el secreto sobre{" "}
+            Cada aviso trae el encabezado <code>Formsis-Signature: t=…,v1=…</code>. Calcula HMAC-SHA256 con el secreto sobre{" "}
             <code>{"`${t}.${body}`"}</code> (el body tal cual llegó) y compáralo con <code>v1</code>. Descarta avisos con{" "}
-            <code>t</code> de hace más de 5 minutos y usa <code>FormFlow-Delivery</code> para ignorar duplicados.
+            <code>t</code> de hace más de 5 minutos y usa <code>Formsis-Delivery</code> para ignorar duplicados.
           </p>
           <p>Responde con un código 2xx en menos de 15 segundos. Si no, reintentamos hasta 8 veces durante unas 2 horas.</p>
         </div>
@@ -145,7 +145,7 @@ function HookFields({ draft, events, onChange }: { draft: Draft; events: string[
           className="input w-full"
           type="url"
           inputMode="url"
-          placeholder="https://mi-sistema.cl/webhooks/formflow"
+          placeholder="https://mi-sistema.cl/webhooks/formsis"
           value={draft.url}
           onChange={(e) => onChange({ ...draft, url: e.target.value })}
         />

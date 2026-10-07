@@ -16,7 +16,7 @@ export function Logo() {
       >
         FF
       </span>
-      <span className="text-lg font-bold tracking-tight text-slate-900">FormFlow</span>
+      <span className="text-lg font-bold tracking-tight text-slate-900">Formsis</span>
     </div>
   );
 }
