@@ -15,7 +15,8 @@ services:
       retries: 10
 
   storage:
-    image: minio/minio:latest
+    # MinIO dejó de publicar imágenes (minio/minio y quay.io ya no se pueden bajar); pgsty/minio es un fork compatible.
+    image: pgsty/minio:latest
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-formflow}
