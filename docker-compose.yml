@@ -15,7 +15,8 @@ services:
       retries: 10
 
   storage:
-    image: minio/minio:latest
+    # MinIO dejó de publicar imágenes (minio/minio y quay.io ya no se pueden bajar); pgsty/minio es un fork compatible.
+    image: pgsty/minio:latest
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-formflow}
@@ -44,13 +45,23 @@ services:
       MAIL_FROM: ${MAIL_FROM:-FormFlow <no-reply@localhost>}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@formflow.local}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-cambiame123}
+      FACE_URL: http://face:8000
+      FACE_TOKEN: ${FACE_TOKEN:-cambia-este-token}
     depends_on:
       db:
         condition: service_healthy
       storage:
         condition: service_started
+      face:
+        condition: service_started
     ports:
       - "8080:8080"
+
+  # Prueba de vida (submódulo face/). Solo lo llama la API por la red interna; no publica puertos.
+  face:
+    build: ./face
+    environment:
+      FACE_TOKEN: ${FACE_TOKEN:-cambia-este-token}
 
   web:
     build: ./web

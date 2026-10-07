@@ -3,8 +3,9 @@ import type { Answers, FormSchema } from "./form-schema";
 
 export type Errors = Record<string, string>;
 
-export const PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
-const BASE = `${PUBLIC_API_URL}/api/v1/portal`;
+// Goes through the web's same-origin proxy (/api/v1/[...path]), so it works from any host (tunnels, phones)
+// without CORS or exposing the API.
+const BASE = "/api/v1/portal";
 
 export type Status = "draft" | "submitted" | "in_review" | "changes_requested" | "approved" | "rejected";
 
@@ -24,6 +25,54 @@ export type UploadedFile = {
   uploadedAt: string;
 };
 
+/** A finished liveness attempt; "pass" and "review" complete the field. */
+export type LivenessDecision = "pass" | "review" | "retry" | "fail" | "expired" | "error";
+export type LivenessAttempt = {
+  id: string;
+  fieldKey: string;
+  decision: LivenessDecision;
+  reasons: string[];
+  completedAt: string | null;
+};
+export type LivenessStep = "center" | "left" | "right" | "closer";
+export type LivenessChallenge = {
+  id: string;
+  steps: LivenessStep[];
+  stepMs: number;
+  framesPerStep: number;
+  expiresAt: string;
+  attemptsLeft: number;
+};
+export type LivenessResult = {
+  id: string;
+  fieldKey: string;
+  decision: LivenessDecision;
+  reasons: string[];
+  completed: boolean;
+  attemptsLeft: number;
+};
+
+export const livenessCompleted = (d: LivenessDecision) => d === "pass" || d === "review";
+
+/** A QR link that lets a phone take the liveness check of one field while the computer waits. */
+export type LivenessHandoff = { id: string; url: string; expiresAt: string };
+export type HandoffStatus = {
+  expiresAt: string;
+  expired: boolean;
+  openedAt: string | null;
+  /** The phone is in the middle of a challenge. */
+  checking: boolean;
+  attempts: LivenessAttempt[];
+  attemptsLeft: number;
+};
+/** What the phone sees when it opens the QR link. */
+export type HandoffInfo = {
+  form: { title: string };
+  field: { label: string; help?: string };
+  completed: boolean;
+  attemptsLeft: number;
+};
+
 export type ReviewComment = { id: string; fieldKey: string | null; body: string; createdAt: string };
 
 export type SubmissionView = {
@@ -34,6 +83,7 @@ export type SubmissionView = {
   data: Answers;
   schema: FormSchema;
   files: UploadedFile[];
+  liveness: LivenessAttempt[];
   comments: ReviewComment[];
   canEdit: boolean;
   editableFields: string[] | null;
@@ -80,6 +130,13 @@ export const portal = {
     request<{ savedAt: string }>(`/submission/data`, { method: "PUT", token, body: JSON.stringify({ data }) }),
   submit: (token: string, data: Answers) =>
     request<{ status: Status }>(`/submission/submit`, { method: "POST", token, body: JSON.stringify({ data }) }),
+  livenessChallenge: (token: string, fieldKey: string) =>
+    request<LivenessChallenge>(`/submission/liveness`, { method: "POST", token, body: JSON.stringify({ fieldKey }) }),
+  livenessFinish: (token: string, id: string, frames: CapturedFrame[]) =>
+    request<LivenessResult>(`/submission/liveness/${id}`, { method: "POST", token, body: framesForm(frames) }),
+  livenessHandoff: (token: string, fieldKey: string) =>
+    request<LivenessHandoff>(`/submission/liveness/handoff`, { method: "POST", token, body: JSON.stringify({ fieldKey }) }),
+  handoffStatus: (token: string, id: string) => request<HandoffStatus>(`/submission/liveness/handoff/${id}`, { token }),
   deleteFile: (token: string, id: string) => request<void>(`/submission/files/${id}`, { method: "DELETE", token }),
 
   async fileBlob(token: string, id: string): Promise<Blob> {
@@ -110,6 +167,23 @@ export const portal = {
       xhr.send(form);
     });
   },
+};
+
+export type CapturedFrame = { step: number; blob: Blob };
+
+function framesForm(frames: CapturedFrame[]) {
+  const form = new FormData();
+  form.append("frameSteps", JSON.stringify(frames.map((f) => f.step)));
+  frames.forEach((f, i) => form.append("frames", f.blob, `${i}.jpg`));
+  return form;
+}
+
+/** Calls a phone makes with the token from the QR. */
+export const phone = {
+  info: (token: string) => request<HandoffInfo>(`/handoff`, { token }),
+  challenge: (token: string) => request<LivenessChallenge>(`/handoff/liveness`, { method: "POST", token }),
+  finish: (token: string, id: string, frames: CapturedFrame[]) =>
+    request<LivenessResult>(`/handoff/liveness/${id}`, { method: "POST", token, body: framesForm(frames) }),
 };
 
 export const statusLabel: Record<Status, string> = {

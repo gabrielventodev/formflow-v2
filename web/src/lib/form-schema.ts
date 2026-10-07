@@ -23,6 +23,7 @@ export type FieldType =
   | "address"
   | "scale"
   | "signature"
+  | "liveness"
   | "info"
   | "heading"
   | "divider"
@@ -103,6 +104,7 @@ export const FIELD_TYPES: { type: FieldType; label: string; description: string;
   { type: "id", label: "RUT / DNI", description: "Documento con validación", group: "documents" },
   { type: "file", label: "Archivo", description: "Documento o imagen", group: "documents" },
   { type: "signature", label: "Firma", description: "Firma dibujada", group: "documents" },
+  { type: "liveness", label: "Prueba de vida", description: "Selfie en vivo con la cámara", group: "documents" },
   { type: "repeater", label: "Grupo repetible", description: "Ej.: socios", group: "layout" },
   { type: "heading", label: "Título", description: "Encabezado y subtítulo", group: "display" },
   { type: "divider", label: "Separador", description: "Línea horizontal", group: "display" },
@@ -263,7 +265,11 @@ export const isDisplay = (t: FieldType | string) => ["info", "heading", "divider
 export const hasAnswer = (t: FieldType) => !isDisplay(t);
 
 /** Whether a condition may depend on fields of this type. */
-export const conditionable = (t: FieldType) => hasAnswer(t) && !["repeater", "file", "address", "signature"].includes(t);
+export const conditionable = (t: FieldType) =>
+  hasAnswer(t) && !["repeater", "file", "address", "signature", "liveness"].includes(t);
+
+/** Fields whose answer lives outside the form data (uploads, camera checks), counted by the server. */
+export const storedOutside = (t: FieldType) => t === "file" || t === "liveness";
 
 export const FILE_ACCEPT: { value: string; label: string }[] = [
   { value: "application/pdf", label: "PDF" },
@@ -327,6 +333,11 @@ export function newField(type: FieldType, taken: Set<string>): Field {
     f.maxMb = 10;
   }
   if (type === "id") f.idKind = "rut";
+  if (type === "liveness") {
+    f.label = "Verifica que eres tú";
+    f.help = "Usaremos tu cámara unos segundos para confirmar que eres una persona real.";
+    f.required = true;
+  }
   if (type === "repeater") f.fields = [{ key: "nombre", type: "text", label: "Nombre" }];
   return f;
 }

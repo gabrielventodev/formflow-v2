@@ -13,6 +13,7 @@ import {
   type CommentRow,
   type Facets,
   type FileRow,
+  type LivenessRow,
   type SchemaField,
   type Status,
   type SubmissionDetail,
@@ -20,6 +21,7 @@ import {
 import { StatusBadge } from "@/components/admin/status-badge";
 import { useMe } from "@/components/admin/shell";
 import { SignatureView } from "@/components/signature-pad";
+import { LivenessReview } from "@/components/admin/liveness-review";
 import { formatAnswer, isDisplay, type Field } from "@/lib/form-schema";
 
 // Types whose stored value needs formatting to read well (codes, amounts, objects).
@@ -120,7 +122,20 @@ function optionLabel(field: SchemaField, v: unknown): string {
   return String(v);
 }
 
-function Value({ field, value, files }: { field: SchemaField; value: unknown; files: FileRow[] }) {
+function Value({
+  field,
+  value,
+  files,
+  liveness = [],
+}: {
+  field: SchemaField;
+  value: unknown;
+  files: FileRow[];
+  liveness?: LivenessRow[];
+}) {
+  if (field.type === "liveness") {
+    return <LivenessReview attempts={liveness.filter((l) => l.field_key === field.key)} />;
+  }
   if (field.type === "file") {
     const own = files.filter((f) => f.field_key === field.key);
     if (own.length === 0) return <Empty />;
@@ -330,7 +345,7 @@ export default function SubmissionPage() {
                         </button>
                       </dt>
                       <dd className="flex flex-col gap-2 text-sm">
-                        <Value field={f} value={lookup(detail.data, sec.key, f.key)} files={detail.files} />
+                        <Value field={f} value={lookup(detail.data, sec.key, f.key)} files={detail.files} liveness={detail.liveness} />
                         {fieldComments.map((c) => (
                           <Comment key={c.id} c={c} onResolve={resolve} />
                         ))}

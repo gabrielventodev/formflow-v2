@@ -120,12 +120,45 @@ export type ApprovalState = {
   reason?: string;
 };
 
+export type LivenessFrameResult = {
+  index: number;
+  step: number;
+  faces: number;
+  face_ratio: number;
+  yaw: number;
+  brightness: number;
+  sharpness: number;
+  real: number | null;
+  similarity: number | null;
+  issues: string[];
+};
+export type LivenessRow = {
+  id: string;
+  field_key: string;
+  steps: string[];
+  decision: "pass" | "review" | "retry" | "fail" | "expired" | "error";
+  reasons: string[];
+  result: {
+    scores?: { passive: number | null; consistency: number | null };
+    steps?: { index: number; step: string; ok: boolean; frame: number | null }[];
+    frames?: LivenessFrameResult[];
+    engine?: Record<string, string>;
+  } | null;
+  frame_steps: number[];
+  best_frame: number | null;
+  created_at: string;
+  completed_at: string | null;
+  /** Taken on a phone through the QR shown on a computer. */
+  from_phone: boolean;
+};
+
 export type SubmissionDetail = {
   approval: ApprovalState | null;
   submission: SubmissionRow;
   data: Record<string, unknown>;
   schema: FormSchema;
   files: FileRow[];
+  liveness: LivenessRow[];
   comments: CommentRow[];
   events: EventRow[];
   allowed_transitions: Status[];
@@ -189,6 +222,7 @@ export const ACTION_LABEL: Record<string, string> = {
   "submission.resubmitted": "Reenvió con correcciones",
   "file.uploaded": "Subió un documento",
   "file.deleted": "Eliminó un documento",
+  "liveness.completed": "Hizo la prueba de vida",
   // Team changes (no submission attached)
   "member.invited": "Invitó a",
   "member.link_sent": "Envió un enlace de contraseña a",
