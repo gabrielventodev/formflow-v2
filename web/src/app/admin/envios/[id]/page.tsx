@@ -270,7 +270,7 @@ export default function SubmissionPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-6">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6">
       <div>
         <Link href="/admin" className="text-sm text-zinc-500 hover:underline">← Envíos</Link>
       </div>

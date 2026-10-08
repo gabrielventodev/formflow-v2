@@ -115,7 +115,8 @@ export function Canvas({
                     <div className="space-y-1.5 p-3">
                       {sec.fields.length === 0 && (
                         <div className="rounded-md border border-dashed border-zinc-300 p-4 text-center text-sm text-zinc-500">
-                          Agrega campos desde el panel de la izquierda o arrástralos aquí.
+                          <span className="lg:hidden">Selecciona esta sección y toca «Agregar campo», o arrastra campos aquí.</span>
+                          <span className="max-lg:hidden">Agrega campos desde el panel de la izquierda o arrástralos aquí.</span>
                         </div>
                       )}
                       {sec.fields.map((f, fi) => {
@@ -139,21 +140,21 @@ export function Canvas({
                                     {f.required && <span className="text-red-600"> *</span>}
                                   </div>
                                   <div className="flex items-center gap-1.5 text-xs text-zinc-500">
-                                    <span>{typeLabel(f.type)}</span>
-                                    <span className="font-mono text-zinc-400">{f.key}</span>
+                                    <span className="shrink-0">{typeLabel(f.type)}</span>
+                                    <span className="truncate font-mono text-zinc-400">{f.key}</span>
                                     {f.type === "repeater" && <span>· {f.fields?.length ?? 0} campos</span>}
                                     {f.type === "currency" && f.currency && <span>· {f.currency}</span>}
                                     {f.type === "scale" && <span>· {f.min ?? 1} a {f.max ?? 5}</span>}
                                   </div>
                                 </div>
                                 {f.showIf && (
-                                  <Badge tone="blue">
-                                    <GitBranch className="mr-1 h-3 w-3" />
-                                    Condicional
+                                  <Badge tone="blue" className="shrink-0">
+                                    <GitBranch className="h-3 w-3 sm:mr-1" />
+                                    <span className="max-sm:sr-only">Condicional</span>
                                   </Badge>
                                 )}
                                 {hasProblem && <Badge tone="amber">Revisar</Badge>}
-                                <div className="flex opacity-0 group-hover:opacity-100">
+                                <div className="flex opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
                                   <Button
                                     size="sm"
                                     variant="ghost"

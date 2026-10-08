@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { Menu, X } from "lucide-react";
 import { adminFetch, canManage, ROLE_LABEL, type Me, type Role } from "@/lib/admin";
 
 const MeContext = createContext<Me | null>(null);
@@ -42,6 +43,9 @@ function Authenticated({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState("");
   const pathname = usePathname();
   const router = useRouter();
+  // The mobile menu stays open only on the page where it was opened, so navigating closes it.
+  const [menuPath, setMenuPath] = useState<string | null>(null);
+  const menuOpen = menuPath === pathname;
 
   useEffect(() => {
     adminFetch<Me>("/auth/me").then(setMe, (e) => setError(e.message));
@@ -60,14 +64,16 @@ function Authenticated({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const nav = NAV.filter((n) => !n.managers || canManage(me.role));
+
   return (
     <MeContext.Provider value={me}>
       <div className="flex min-h-screen flex-col bg-zinc-50 text-zinc-900">
-        <header className="border-b border-zinc-200 bg-white">
-          <div className="flex h-14 items-center gap-6 px-6">
+        <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white md:static">
+          <div className="flex h-14 items-center gap-6 px-4 sm:px-6">
             <Link href="/admin" className="font-semibold">Formsis</Link>
-            <nav className="flex gap-1 overflow-x-auto text-sm">
-              {NAV.filter((n) => !n.managers || canManage(me.role)).map((n) => (
+            <nav className="hidden gap-1 overflow-x-auto text-sm md:flex">
+              {nav.map((n) => (
                 <Link
                   key={n.href}
                   href={n.href}
@@ -77,14 +83,46 @@ function Authenticated({ children }: { children: React.ReactNode }) {
                 </Link>
               ))}
             </nav>
-            <div className="ml-auto flex items-center gap-3 text-sm">
-              <Link href="/admin/cuenta" className="hidden rounded-md px-2 py-1 text-right hover:bg-zinc-100 sm:block" title="Mi cuenta">
+            <div className="ml-auto hidden items-center gap-3 text-sm md:flex">
+              <Link href="/admin/cuenta" className="rounded-md px-2 py-1 text-right hover:bg-zinc-100" title="Mi cuenta">
                 <span className="block leading-tight">{me.name || me.email}</span>
                 <span className="block text-xs leading-tight text-zinc-500">{ROLE_LABEL[me.role]}</span>
               </Link>
               <button onClick={logout} className="btn">Salir</button>
             </div>
+            <button
+              type="button"
+              onClick={() => setMenuPath(menuOpen ? null : pathname)}
+              className="ml-auto -mr-2 inline-flex h-10 w-10 items-center justify-center rounded-md text-zinc-700 hover:bg-zinc-100 md:hidden"
+              aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-expanded={menuOpen}
+              aria-controls="admin-menu"
+            >
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
+          {menuOpen && (
+            <div id="admin-menu" className="border-t border-zinc-200 px-4 pb-4 pt-2 md:hidden">
+              <nav className="flex flex-col text-sm">
+                {nav.map((n) => (
+                  <Link
+                    key={n.href}
+                    href={n.href}
+                    className={`rounded-md px-3 py-2.5 ${n.match(pathname) ? "bg-zinc-100 font-medium" : "text-zinc-700"}`}
+                  >
+                    {n.label}
+                  </Link>
+                ))}
+              </nav>
+              <div className="mt-2 flex items-center gap-3 border-t border-zinc-200 pt-3 text-sm">
+                <Link href="/admin/cuenta" className="min-w-0 flex-1 rounded-md px-3 py-1.5 hover:bg-zinc-100">
+                  <span className="block truncate leading-tight">{me.name || me.email}</span>
+                  <span className="block text-xs leading-tight text-zinc-500">{ROLE_LABEL[me.role]} · Mi cuenta</span>
+                </Link>
+                <button onClick={logout} className="btn">Salir</button>
+              </div>
+            </div>
+          )}
         </header>
         <div className="flex flex-1 flex-col">
           {allowed(pathname, me.role) ? (

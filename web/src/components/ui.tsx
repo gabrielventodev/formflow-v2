@@ -54,14 +54,22 @@ export function Label({ children, htmlFor, hint }: { children: ReactNode; htmlFo
   );
 }
 
-export function Badge({ children, tone = "zinc" }: { children: ReactNode; tone?: "zinc" | "green" | "amber" | "blue" }) {
+export function Badge({
+  children,
+  tone = "zinc",
+  className,
+}: {
+  children: ReactNode;
+  tone?: "zinc" | "green" | "amber" | "blue";
+  className?: string;
+}) {
   const tones = {
     zinc: "bg-zinc-100 text-zinc-700",
     green: "bg-emerald-50 text-emerald-700",
     amber: "bg-amber-50 text-amber-800",
     blue: "bg-sky-50 text-sky-700",
   };
-  return <span className={cn("inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium", tones[tone])}>{children}</span>;
+  return <span className={cn("inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium", tones[tone], className)}>{children}</span>;
 }
 
 export function Checkbox({ label, ...props }: InputHTMLAttributes<HTMLInputElement> & { label: ReactNode }) {
