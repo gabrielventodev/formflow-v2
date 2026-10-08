@@ -39,10 +39,6 @@ make up
 - API: http://localhost:8080/api/v1/health
 - Consola de MinIO: http://localhost:9001
 
-### Ambiente de prueba en internet
-
-Para subirlo a un servidor con https (por ejemplo una VM de Google Cloud) usa `docker-compose.prod.yml` y sigue la guía [docs/despliegue-gcp.md](docs/despliegue-gcp.md).
-
 Desarrollo local sin contenedores para la API y la web:
 
 ```sh
@@ -52,6 +48,10 @@ make web    # Next.js en :3000
 ```
 
 Requisitos: Go 1.26+, Node 22+, Docker.
+
+### Ambiente de prueba en internet
+
+Para subirlo a un servidor con https (por ejemplo una VM de Google Cloud) usa `docker-compose.prod.yml` y sigue la guía [docs/despliegue-gcp.md](docs/despliegue-gcp.md).
 
 ### Desde VS Code
 
