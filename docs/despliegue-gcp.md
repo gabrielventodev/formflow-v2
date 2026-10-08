@@ -111,7 +111,7 @@ Edita el archivo con `nano .env` y completa como mínimo:
 
 En nano se guarda con `Ctrl+O`, Enter, y se sale con `Ctrl+X`.
 
-**Correos:** si dejas `SMTP_HOST` vacío, los correos (enlaces mágicos, invitaciones, recuperar contraseña) no se envían y quedan escritos en el log de la API. Para que otras personas los reciban, configura un SMTP. Dos opciones gratis para pruebas: [Brevo](https://www.brevo.com) (300 correos al día) o una [contraseña de aplicación de Gmail](https://myaccount.google.com/apppasswords) con `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, tu Gmail como usuario y `MAIL_FROM` con tu misma dirección.
+**Correos:** `SMTP_HOST` es obligatorio. Sin SMTP los correos (enlaces mágicos, invitaciones, recuperar contraseña) quedarían escritos en el log de la API, y cualquiera con acceso a los logs podría entrar a las solicitudes, así que en producción la API no arranca sin él. Dos opciones gratis para pruebas: [Brevo](https://www.brevo.com) (300 correos al día) o una [contraseña de aplicación de Gmail](https://myaccount.google.com/apppasswords) con `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, tu Gmail como usuario y `MAIL_FROM` con tu misma dirección.
 
 > Importante: no cambies `POSTGRES_PASSWORD` después del primer arranque. Postgres la guarda al crear la base y, si la cambias en `.env`, la API ya no podrá conectarse.
 
@@ -159,12 +159,6 @@ Las migraciones de la base se aplican solas al arrancar la API.
 
 ```sh
 docker compose exec -T db psql -U formsis formsis < scripts/seed-demo.sql
-```
-
-**Ver un enlace mágico sin SMTP:**
-
-```sh
-docker compose logs api | grep "SMTP not configured"
 ```
 
 **Respaldar la base:**
