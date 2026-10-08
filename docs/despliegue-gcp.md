@@ -142,16 +142,51 @@ Desde ahí basta con `docker compose ps`, `docker compose logs -f api`, etc. Los
 
 ---
 
-## Operación del día a día
+## Deploy automático
 
-**Actualizar a la última versión** (después de mezclar cambios en `main`):
+Con esto, cada merge a `main` actualiza el servidor solo: GitHub Actions entra por SSH y corre `deploy/actualizar.sh` (el workflow está en `.github/workflows/deploy.yml`). Tarda lo mismo que la actualización a mano, unos minutos en una e2-medium. Se configura una sola vez.
+
+**1. En la máquina** (entra con `gcloud compute ssh formsis --zone=$ZONA`), crea una llave solo para el deploy. La línea que se agrega a `authorized_keys` limita esa llave a correr `actualizar.sh`: aunque alguien la robara, no podría abrir una terminal ni hacer otra cosa.
 
 ```sh
-cd ~/formsis-v2
-git pull
-git submodule update --init
-docker compose up -d --build
+ssh-keygen -t ed25519 -N "" -C deploy-github -f ~/deploy_github
+echo "restrict,command=\"$HOME/formsis-v2/deploy/actualizar.sh\" $(cat ~/deploy_github.pub)" >> ~/.ssh/authorized_keys
 ```
+
+Deja esta terminal abierta; en el paso 2 copias de aquí tres valores.
+
+**2. En GitHub**, abre el repositorio `formsis-v2` → **Settings → Secrets and variables → Actions → New repository secret** y crea estos cuatro:
+
+| Secreto | Valor |
+|---|---|
+| `DEPLOY_HOST` | La IP estática de la máquina, por ejemplo `34.176.10.20` |
+| `DEPLOY_USER` | Lo que imprime `whoami` en la máquina |
+| `DEPLOY_SSH_KEY` | Todo lo que imprime `cat ~/deploy_github`, incluidas las líneas `-----BEGIN` y `-----END` |
+| `DEPLOY_KNOWN_HOSTS` | Lo que imprime `ssh-keyscan -t ed25519 localhost 2>/dev/null \| sed "s/^localhost/TU_IP/"`, cambiando `TU_IP` por la misma IP de `DEPLOY_HOST` |
+
+`DEPLOY_KNOWN_HOSTS` es la huella de la máquina: con ella GitHub comprueba que se conecta a tu servidor y no a otro.
+
+**3. Borra la llave privada de la máquina**, que ya quedó guardada en GitHub:
+
+```sh
+rm ~/deploy_github ~/deploy_github.pub
+```
+
+**4. Pruébalo:** en GitHub ve a **Actions → Deploy → Run workflow**. Si termina en verde, desde ahora cada merge a `main` se despliega solo. Si falla, el log del paso "Actualizar el servidor" dice por qué (casi siempre un secreto mal copiado).
+
+Para apagarlo, borra la línea `deploy-github` de `~/.ssh/authorized_keys` en la máquina, o desactiva el workflow en **Actions → Deploy → ⋯ → Disable workflow**.
+
+**Ojo con el backend:** un merge en `formsis-backend` no despliega nada por sí solo. Se despliega cuando `formsis-v2` actualiza el submódulo `api` y ese cambio llega a `main`.
+
+## Operación del día a día
+
+**Actualizar a la última versión** (después de mezclar cambios en `main`). Si configuraste el [deploy automático](#deploy-automático) no hace falta; si no, o para forzarlo a mano:
+
+```sh
+~/formsis-v2/deploy/actualizar.sh
+```
+
+Hace `git pull`, actualiza los submódulos y reconstruye con `docker compose up -d --build`. Si la compilación falla, los contenedores que estaban corriendo siguen arriba.
 
 Las migraciones de la base se aplican solas al arrancar la API.
 
