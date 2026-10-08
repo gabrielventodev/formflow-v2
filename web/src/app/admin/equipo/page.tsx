@@ -67,7 +67,7 @@ export default function TeamPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-4 p-6">
+    <div className="mx-auto w-full max-w-5xl space-y-4 px-4 py-6 sm:px-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">Equipo</h1>
@@ -101,8 +101,8 @@ export default function TeamPage() {
       )}
 
       <div className="card overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-500">
+        <table className="block w-full text-sm sm:table">
+          <thead className="hidden border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-500 sm:table-header-group">
             <tr>
               <th className="px-4 py-3 font-medium">Miembro</th>
               <th className="px-4 py-3 font-medium">Rol</th>
@@ -110,10 +110,10 @@ export default function TeamPage() {
               {manager && <th className="px-4 py-3 font-medium"><span className="sr-only">Acciones</span></th>}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="block sm:table-row-group">
             {members?.map((m) => (
-              <tr key={m.id} className={`border-b border-zinc-100 last:border-0 ${m.active ? "" : "text-zinc-400"}`}>
-                <td className="px-4 py-3">
+              <tr key={m.id} className={`block border-b border-zinc-100 px-4 py-3 last:border-0 sm:table-row sm:p-0 ${m.active ? "" : "text-zinc-400"}`}>
+                <td className="block sm:table-cell sm:px-4 sm:py-3">
                   <div className="font-medium">
                     {m.name || m.email}
                     {m.id === me.id && <span className="ml-1.5 text-xs font-normal text-zinc-500">(tú)</span>}
@@ -124,7 +124,7 @@ export default function TeamPage() {
                     {!m.active && <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600">Desactivado</span>}
                   </div>
                 </td>
-                <td className="px-4 py-3">
+                <td className="mt-2 block sm:mt-0 sm:table-cell sm:px-4 sm:py-3">
                   {editable(m) && m.active ? (
                     <select
                       aria-label={`Rol de ${m.name || m.email}`}
@@ -144,11 +144,13 @@ export default function TeamPage() {
                     <span title={ROLE_HELP[m.role]}>{ROLE_LABEL[m.role]}</span>
                   )}
                 </td>
-                <td className="whitespace-nowrap px-4 py-3 text-zinc-600">{m.last_login_at ? formatDate(m.last_login_at) : "Nunca"}</td>
+                <td className="mt-2 block text-xs text-zinc-600 sm:mt-0 sm:table-cell sm:whitespace-nowrap sm:px-4 sm:py-3 sm:text-sm">
+                  <span className="sm:hidden">Último acceso: </span>
+                  {m.last_login_at ? formatDate(m.last_login_at) : "Nunca"}</td>
                 {manager && (
-                  <td className="px-4 py-3">
+                  <td className="block sm:table-cell sm:px-4 sm:py-3">
                     {editable(m) && (
-                      <div className="flex justify-end gap-2">
+                      <div className="mt-3 flex flex-wrap gap-2 sm:mt-0 sm:flex-nowrap sm:justify-end">
                         {m.active && (
                           <button className="btn" disabled={busy === m.id} onClick={() => sendLink(m)}>
                             {m.pending ? "Reenviar invitación" : "Enviar enlace de contraseña"}
@@ -168,8 +170,8 @@ export default function TeamPage() {
               </tr>
             ))}
             {!members && !error && (
-              <tr>
-                <td colSpan={4} className="px-4 py-12 text-center text-zinc-500">Cargando…</td>
+              <tr className="block sm:table-row">
+                <td colSpan={4} className="block px-4 py-12 sm:table-cell text-center text-zinc-500">Cargando…</td>
               </tr>
             )}
           </tbody>

@@ -81,7 +81,7 @@ export default function BrandingPage() {
   }
 
   return (
-    <div className="mx-auto grid w-full max-w-5xl gap-6 p-6 lg:grid-cols-[1fr_380px]">
+    <div className="mx-auto grid w-full max-w-5xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[1fr_380px]">
       <div className="space-y-4">
         <div>
           <h1 className="text-xl font-semibold">Marca</h1>

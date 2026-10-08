@@ -96,7 +96,7 @@ export function LinksManager({ formId }: { formId: string }) {
   const published = form?.status === "published";
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-6 px-6 py-8">
+    <main className="mx-auto w-full max-w-4xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <div>
         <Link href={`/admin/forms/${formId}`} className="text-sm text-zinc-500 hover:text-zinc-900">
           ← Volver al formulario
@@ -163,9 +163,9 @@ export function LinksManager({ formId }: { formId: string }) {
         ) : (
           <ul className="divide-y divide-zinc-100">
             {links.map((l) => (
-              <li key={l.id} className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm">
+              <li key={l.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 text-sm sm:px-5">
                 <Badge tone={l.kind === "public" ? "blue" : "zinc"}>{l.kind === "public" ? "Público" : "Invitación"}</Badge>
-                <div className="min-w-0 flex-1">
+                <div className="order-last min-w-0 flex-1 basis-full sm:order-none sm:basis-0">
                   <p className="truncate font-mono text-xs">{l.url}</p>
                   <p className="text-xs text-zinc-500">
                     {l.inviteeEmail && `${l.inviteeEmail} · `}
@@ -173,7 +173,7 @@ export function LinksManager({ formId }: { formId: string }) {
                     {l.expiresAt && ` · vence ${formatDate(l.expiresAt)}`}
                   </p>
                 </div>
-                <Button size="sm" onClick={() => copy(l)}>
+                <Button size="sm" className="ml-auto sm:ml-0" onClick={() => copy(l)}>
                   {copied === l.id ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   {copied === l.id ? "Copiado" : "Copiar"}
                 </Button>

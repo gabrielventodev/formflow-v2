@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Plus, X } from "lucide-react";
 import { FormRenderer } from "@/components/form-renderer";
 import { Button, Input } from "@/components/ui";
 import { ApiError, apiGet, apiPatch, apiPost, formsPath, type FormDetail, type FormVersion, type VersionInfo } from "@/lib/api";
@@ -27,6 +27,8 @@ export function Builder({ formId }: { formId: string }) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [publishing, setPublishing] = useState(false);
+  // Below lg the field palette and the inspector open as bottom sheets instead of side columns.
+  const [sheet, setSheet] = useState<"add" | "inspect" | null>(null);
 
   const base = `${formsPath}/${formId}`;
   const pending = useRef<{ title: string; schema: FormSchema } | null>(null);
@@ -124,17 +126,30 @@ export function Builder({ formId }: { formId: string }) {
   const addOfType = (type: FieldType) => {
     const r = addField(schema, sel, type);
     changeSchema(r.schema, r.sel);
+    setSheet("inspect");
   };
+
+  const select = (next: Selection) => {
+    setSel(next);
+    setSheet("inspect");
+  };
+
+  // On small screens a side panel becomes a bottom sheet that only shows while open; lg and up keep the columns.
+  const sheetClass = (open: boolean) =>
+    cn(
+      "max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-50 max-lg:max-h-[80vh] max-lg:overflow-y-auto max-lg:rounded-b-none max-lg:rounded-t-2xl max-lg:border-x-0 max-lg:border-b-0 max-lg:border-t max-lg:border-zinc-200 max-lg:bg-white max-lg:p-4 max-lg:shadow-2xl",
+      !open && "max-lg:hidden",
+    );
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex flex-wrap items-center gap-3 border-b border-zinc-200 bg-white px-4 py-2">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-zinc-200 bg-white px-4 py-2">
         <Link href="/admin/forms" className="rounded p-1 text-zinc-500 hover:bg-zinc-100" aria-label="Volver">
           <ChevronLeft className="h-5 w-5" />
         </Link>
         <Input
           aria-label="Título del formulario"
-          className="h-8 max-w-sm border-transparent font-medium hover:border-zinc-300"
+          className="h-8 max-w-sm border-transparent font-medium hover:border-zinc-300 max-sm:min-w-0 max-sm:flex-[1_1_70%]"
           value={title}
           disabled={archived}
           onChange={(e) => change({ title: e.target.value })}
@@ -143,7 +158,7 @@ export function Builder({ formId }: { formId: string }) {
         <span className="text-xs text-zinc-500">
           {{ saved: "Guardado", pending: "Cambios sin guardar…", saving: "Guardando…", error: "Error al guardar" }[saveState]}
         </span>
-        <div className="ml-auto flex items-center gap-1 rounded-md bg-zinc-100 p-0.5">
+        <div className="ml-auto flex items-center gap-1 rounded-md bg-zinc-100 p-0.5 max-sm:order-last max-sm:ml-0 max-sm:w-full">
           {(
             [
               ["edit", "Editar"],
@@ -154,7 +169,7 @@ export function Builder({ formId }: { formId: string }) {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={cn("rounded px-3 py-1 text-sm", tab === t ? "bg-white font-medium shadow-sm" : "text-zinc-600")}
+              className={cn("rounded px-3 py-1 text-sm max-sm:flex-1", tab === t ? "bg-white font-medium shadow-sm" : "text-zinc-600")}
             >
               {label}
             </button>
@@ -162,6 +177,7 @@ export function Builder({ formId }: { formId: string }) {
         </div>
         <Button
           variant="primary"
+          className="max-sm:ml-auto"
           onClick={publish}
           disabled={!canPublish || publishing}
           title={
@@ -196,14 +212,20 @@ export function Builder({ formId }: { formId: string }) {
       )}
 
       {tab === "edit" && (
-        <div className={cn("grid flex-1 grid-cols-[200px_1fr_320px] gap-4 p-4", archived && "pointer-events-none opacity-60")}>
-          <aside>
-            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">Agregar campo</h2>
+        <div className={cn("grid flex-1 gap-4 p-4 max-lg:pb-24 lg:grid-cols-[200px_1fr_320px]", archived && "pointer-events-none opacity-60")}>
+          {sheet && <div className="fixed inset-0 z-40 bg-zinc-900/30 lg:hidden" onClick={() => setSheet(null)} aria-hidden />}
+          <aside className={sheetClass(sheet === "add")}>
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Agregar campo</h2>
+              <Button size="sm" variant="ghost" className="lg:hidden" onClick={() => setSheet(null)} aria-label="Cerrar">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
             <div className="space-y-4">
               {FIELD_GROUPS.map((g) => (
                 <div key={g.value}>
                   <h3 className="mb-1 text-[11px] font-medium text-zinc-500">{g.label}</h3>
-                  <div className="space-y-1">
+                  <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 lg:block lg:space-y-1">
                     {FIELD_TYPES.filter((t) => t.group === g.value).map((t) => (
                       <button
                         key={t.type}
@@ -220,7 +242,7 @@ export function Builder({ formId }: { formId: string }) {
             </div>
           </aside>
 
-          <div className="min-w-0">
+          <div className="min-w-0 max-lg:order-first">
             {problems.length > 0 && (
               <details className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                 <summary className="cursor-pointer font-medium">
@@ -233,7 +255,7 @@ export function Builder({ formId }: { formId: string }) {
                       <li key={i}>
                         <button
                           className="text-left hover:underline"
-                          onClick={() => loc.section !== undefined && setSel({ s: loc.section, f: loc.field, sub: loc.sub })}
+                          onClick={() => loc.section !== undefined && select({ s: loc.section, f: loc.field, sub: loc.sub })}
                         >
                           {describe(schema, loc)}
                           {p.message}
@@ -248,7 +270,7 @@ export function Builder({ formId }: { formId: string }) {
               schema={schema}
               sel={sel}
               problemPaths={problemPaths}
-              onSelect={setSel}
+              onSelect={select}
               onChange={changeSchema}
               onAddSection={() => {
                 const r = addSection(schema);
@@ -263,7 +285,20 @@ export function Builder({ formId }: { formId: string }) {
             />
           </div>
 
-          <aside className="rounded-lg border border-zinc-200 bg-white p-4">
+          {!archived && (
+            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-zinc-200 bg-white/95 p-3 backdrop-blur lg:hidden">
+              <Button variant="primary" className="h-11 w-full" onClick={() => setSheet("add")}>
+                <Plus className="h-4 w-4" /> Agregar campo
+              </Button>
+            </div>
+          )}
+
+          <aside className={cn("rounded-lg border border-zinc-200 bg-white p-4", sheetClass(sheet === "inspect" && sel !== null))}>
+            <div className="sticky -top-4 z-10 -mx-4 -mt-4 mb-3 flex justify-end border-b border-zinc-100 bg-white px-4 py-2 lg:hidden">
+              <Button size="sm" variant="primary" onClick={() => setSheet(null)}>
+                Listo
+              </Button>
+            </div>
             <Inspector
               schema={schema}
               sel={sel}
@@ -277,9 +312,9 @@ export function Builder({ formId }: { formId: string }) {
       )}
 
       {tab === "preview" && (
-        <div className="mx-auto w-full max-w-2xl p-6">
+        <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:p-6">
           <p className="mb-4 text-xs text-zinc-500">Vista previa del borrador actual. Nada de lo que escribas aquí se guarda.</p>
-          <div className="rounded-lg border border-zinc-200 bg-white p-6">
+          <div className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-6">
             <h1 className="mb-6 text-xl font-semibold">{title}</h1>
             <FormRenderer key={JSON.stringify(schema)} schema={schema} />
           </div>
@@ -313,7 +348,7 @@ function Versions({ base, current }: { base: string; current: VersionInfo | null
     return <p className="p-6 text-sm text-zinc-500">Todavía no hay versiones publicadas. Al publicar se congela una versión que no cambia más.</p>;
   }
   return (
-    <div className="grid flex-1 grid-cols-[260px_1fr] gap-4 p-4">
+    <div className="grid flex-1 gap-4 p-4 md:grid-cols-[260px_1fr]">
       <ul className="space-y-1">
         {versions.map((v) => (
           <li key={v.id}>
@@ -331,7 +366,7 @@ function Versions({ base, current }: { base: string; current: VersionInfo | null
           </li>
         ))}
       </ul>
-      <div className="rounded-lg border border-zinc-200 bg-white p-6">
+      <div className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-6">
         {open ? (
           <>
             <p className="mb-4 text-xs text-zinc-500">

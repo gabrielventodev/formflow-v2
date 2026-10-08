@@ -80,7 +80,7 @@ export default function ApprovalFlowPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-4 p-6">
+    <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-6 sm:px-6">
       <Link href="/admin/forms" className="text-sm text-zinc-500 hover:underline">← Formularios</Link>
       <div>
         <h1 className="text-xl font-semibold">Flujo de aprobación</h1>
@@ -115,7 +115,7 @@ export default function ApprovalFlowPage() {
                 maxLength={80}
                 onChange={(e) => update(i, { name: e.target.value })}
                 placeholder="Nombre del paso, p. ej. Cumplimiento"
-                className="input flex-1"
+                className="input min-w-0 flex-1"
               />
               <button className="btn !px-2" aria-label="Subir paso" disabled={i === 0} onClick={() => move(i, -1)}>
                 <ArrowUp className="size-4" aria-hidden />

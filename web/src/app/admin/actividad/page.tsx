@@ -71,7 +71,7 @@ export default function ActivityPage() {
   }, [fetchPage]);
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-4 p-6">
+    <div className="mx-auto w-full max-w-4xl space-y-4 px-4 py-6 sm:px-6">
       <div>
         <h1 className="text-xl font-semibold">Actividad</h1>
         <p className="text-sm text-zinc-500">Historial de auditoría: quién hizo qué y cuándo. Los registros no se pueden editar ni borrar.</p>

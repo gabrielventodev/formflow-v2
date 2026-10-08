@@ -70,8 +70,8 @@ export default function WebhooksPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-4 p-6">
-      <div className="flex items-start justify-between gap-4">
+    <div className="mx-auto w-full max-w-4xl space-y-4 px-4 py-6 sm:px-6">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between sm:gap-4">
         <div>
           <h1 className="text-xl font-semibold">Webhooks</h1>
           <p className="text-sm text-zinc-500">
@@ -414,8 +414,8 @@ function HookCard({
           ) : deliveries.length === 0 ? (
             <p className="text-sm text-zinc-500">Sin avisos todavía.</p>
           ) : (
-            <table className="w-full text-left text-sm">
-              <thead className="text-xs text-zinc-500">
+            <table className="block w-full text-left text-sm sm:table">
+              <thead className="hidden text-xs text-zinc-500 sm:table-header-group">
                 <tr>
                   <th className="py-1 pr-3 font-medium">Evento</th>
                   <th className="py-1 pr-3 font-medium">Estado</th>
@@ -424,7 +424,7 @@ function HookCard({
                   <th className="py-1 font-medium"><span className="sr-only">Acciones</span></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
+              <tbody className="block divide-y divide-zinc-100 sm:table-row-group">
                 {deliveries.map((d) => (
                   <DeliveryRow
                     key={d.id}
@@ -464,22 +464,22 @@ function DeliveryRow({
 }) {
   return (
     <>
-      <tr className="align-top">
-        <td className="py-2 pr-3">{WEBHOOK_EVENT_LABEL[d.event] ?? d.event}</td>
-        <td className="py-2 pr-3">
+      <tr className="block py-2 align-top sm:table-row sm:py-0">
+        <td className="block font-medium sm:table-cell sm:py-2 sm:pr-3 sm:font-normal">{WEBHOOK_EVENT_LABEL[d.event] ?? d.event}</td>
+        <td className="mt-1 block sm:mt-0 sm:table-cell sm:py-2 sm:pr-3">
           <StatusPill status={d.status} />
           <div className="mt-1 text-xs text-zinc-500">
             {d.attempts} {d.attempts === 1 ? "intento" : "intentos"}
             {d.next_attempt_at && d.attempts > 0 && <> · próximo {formatDate(d.next_attempt_at)}</>}
           </div>
         </td>
-        <td className="max-w-xs py-2 pr-3 text-xs">
+        <td className="mt-1 block text-xs sm:mt-0 sm:table-cell sm:max-w-xs sm:py-2 sm:pr-3">
           {d.last_status_code && <span className="font-mono">{d.last_status_code}</span>}
           {d.last_error && <div className="break-words text-rose-700">{d.last_error}</div>}
           {!d.last_status_code && !d.last_error && <span className="text-zinc-400">—</span>}
         </td>
-        <td className="py-2 pr-3 text-xs text-zinc-600">{formatDate(d.created_at)}</td>
-        <td className="py-2 text-right whitespace-nowrap">
+        <td className="mt-1 block text-xs text-zinc-600 sm:mt-0 sm:table-cell sm:py-2 sm:pr-3">{formatDate(d.created_at)}</td>
+        <td className="mt-1 block whitespace-nowrap sm:mt-0 sm:table-cell sm:py-2 sm:text-right">
           <button className="text-xs text-zinc-600 underline hover:text-zinc-900" onClick={onPayload}>
             {payload ? "Ocultar" : "Contenido"}
           </button>
@@ -491,8 +491,8 @@ function DeliveryRow({
         </td>
       </tr>
       {payload && (
-        <tr>
-          <td colSpan={5} className="pb-3">
+        <tr className="block sm:table-row">
+          <td colSpan={5} className="block pb-3 sm:table-cell">
             <pre className="max-h-72 overflow-auto rounded-md bg-zinc-900 p-3 text-xs text-zinc-100">{payload}</pre>
           </td>
         </tr>

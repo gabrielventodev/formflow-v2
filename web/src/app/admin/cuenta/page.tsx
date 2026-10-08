@@ -37,7 +37,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-xl space-y-4 p-6">
+    <div className="mx-auto w-full max-w-xl space-y-4 px-4 py-6 sm:px-6">
       <h1 className="text-xl font-semibold">Mi cuenta</h1>
       <dl className="card grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 p-4 text-sm">
         <dt className="text-zinc-500">Nombre</dt>

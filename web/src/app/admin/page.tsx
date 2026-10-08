@@ -80,7 +80,7 @@ function Inbox() {
   const hasFilters = ["form_id", "q", "from", "to", "assigned"].some((k) => params.get(k));
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-6 py-6">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-6 sm:px-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Envíos</h1>
@@ -108,36 +108,36 @@ function Inbox() {
         })}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="grid grid-cols-2 items-end gap-2 sm:flex sm:flex-wrap sm:items-center">
         <input
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por nombre, email o ID"
-          className="input w-full sm:w-72"
+          className="input col-span-2 w-full sm:w-72"
         />
-        <select value={params.get("form_id") ?? ""} onChange={(e) => update({ form_id: e.target.value || null })} className="input">
+        <select value={params.get("form_id") ?? ""} onChange={(e) => update({ form_id: e.target.value || null })} className="input col-span-2 min-w-0 sm:col-span-1">
           <option value="">Todos los formularios</option>
           {facets.forms.map((f) => (
             <option key={f.id} value={f.id}>{f.title}</option>
           ))}
         </select>
-        <select value={params.get("assigned") ?? ""} onChange={(e) => update({ assigned: e.target.value || null })} className="input">
+        <select value={params.get("assigned") ?? ""} onChange={(e) => update({ assigned: e.target.value || null })} className="input min-w-0">
           <option value="">Cualquier revisor</option>
           <option value="none">Sin asignar</option>
           {facets.reviewers.map((r) => (
             <option key={r.id} value={r.id}>{r.name || r.email}</option>
           ))}
         </select>
-        <label className="flex items-center gap-1 text-sm text-zinc-500">
+        <label className="flex min-w-0 flex-col gap-1 text-xs max-sm:order-last text-zinc-500 sm:flex-row sm:items-center sm:text-sm">
           Desde
-          <input type="date" value={params.get("from") ?? ""} onChange={(e) => update({ from: e.target.value || null })} className="input" />
+          <input type="date" value={params.get("from") ?? ""} onChange={(e) => update({ from: e.target.value || null })} className="input min-w-0" />
         </label>
-        <label className="flex items-center gap-1 text-sm text-zinc-500">
+        <label className="flex min-w-0 flex-col gap-1 text-xs max-sm:order-last text-zinc-500 sm:flex-row sm:items-center sm:text-sm">
           Hasta
-          <input type="date" value={params.get("to") ?? ""} onChange={(e) => update({ to: e.target.value || null })} className="input" />
+          <input type="date" value={params.get("to") ?? ""} onChange={(e) => update({ to: e.target.value || null })} className="input min-w-0" />
         </label>
-        <select value={params.get("sort") ?? ""} onChange={(e) => update({ sort: e.target.value || null })} className="input">
+        <select value={params.get("sort") ?? ""} onChange={(e) => update({ sort: e.target.value || null })} className="input min-w-0">
           <option value="">Más recientes</option>
           <option value="oldest">Más antiguos</option>
         </select>
@@ -147,7 +147,7 @@ function Inbox() {
               setSearch("");
               update({ form_id: null, q: null, from: null, to: null, assigned: null });
             }}
-            className="text-sm text-zinc-500 underline"
+            className="justify-self-start text-sm text-zinc-500 underline max-sm:order-last"
           >
             Limpiar filtros
           </button>
@@ -157,8 +157,8 @@ function Inbox() {
       {error && <p className="text-sm text-rose-600">{error}</p>}
 
       <div className="card overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-500">
+        <table className="block w-full text-sm sm:table">
+          <thead className="hidden border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-500 sm:table-header-group">
             <tr>
               <th className="px-4 py-3 font-medium">Solicitante</th>
               <th className="px-4 py-3 font-medium">Formulario</th>
@@ -167,23 +167,23 @@ function Inbox() {
               <th className="px-4 py-3 font-medium">Enviado</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="block sm:table-row-group">
             {list?.items.map((s) => (
               <tr
                 key={s.id}
                 onClick={() => router.push(`/admin/envios/${s.id}`)}
-                className="cursor-pointer border-b border-zinc-100 last:border-0 hover:bg-zinc-50"
+                className="block cursor-pointer border-b border-zinc-100 px-4 py-3 last:border-0 hover:bg-zinc-50 sm:table-row sm:p-0"
               >
-                <td className="px-4 py-3">
+                <td className="block sm:table-cell sm:px-4 sm:py-3">
                   <Link href={`/admin/envios/${s.id}`} className="font-medium" onClick={(e) => e.stopPropagation()}>
                     {s.applicant_name || s.applicant_email}
                   </Link>
                   {s.applicant_name && <div className="text-xs text-zinc-500">{s.applicant_email}</div>}
                 </td>
-                <td className="px-4 py-3">
+                <td className="mt-1 block text-zinc-600 sm:mt-0 sm:table-cell sm:px-4 sm:py-3 sm:text-zinc-900">
                   {s.form_title} <span className="text-xs text-zinc-400">v{s.version_number}</span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="mt-2 block sm:mt-0 sm:table-cell sm:px-4 sm:py-3">
                   <StatusBadge status={s.status} />
                   {s.approval_step && (
                     <div className="mt-1 whitespace-nowrap text-xs text-zinc-500">
@@ -191,20 +191,25 @@ function Inbox() {
                     </div>
                   )}
                 </td>
-                <td className="px-4 py-3 text-zinc-600">{s.assigned_to ? s.assigned_to.name || s.assigned_to.email : "—"}</td>
-                <td className="whitespace-nowrap px-4 py-3 text-zinc-600">{formatDate(s.submitted_at ?? s.created_at)}</td>
+                <td className="mt-2 inline-block text-xs text-zinc-500 sm:mt-0 sm:table-cell sm:px-4 sm:py-3 sm:text-sm sm:text-zinc-600">
+                  <span className="sm:hidden">Revisor: </span>
+                  {s.assigned_to ? s.assigned_to.name || s.assigned_to.email : "—"}
+                </td>
+                <td className="ml-3 inline-block whitespace-nowrap text-xs text-zinc-500 sm:ml-0 sm:table-cell sm:px-4 sm:py-3 sm:text-sm sm:text-zinc-600">
+                  <span className="sm:hidden">· </span>
+                  {formatDate(s.submitted_at ?? s.created_at)}</td>
               </tr>
             ))}
             {list && list.items.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-zinc-500">
+              <tr className="block sm:table-row">
+                <td colSpan={5} className="block px-4 py-12 sm:table-cell text-center text-zinc-500">
                   No hay envíos {hasFilters ? "con estos filtros" : "en esta bandeja"}.
                 </td>
               </tr>
             )}
             {!list && !error && (
-              <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-zinc-500">Cargando…</td>
+              <tr className="block sm:table-row">
+                <td colSpan={5} className="block px-4 py-12 sm:table-cell text-center text-zinc-500">Cargando…</td>
               </tr>
             )}
           </tbody>

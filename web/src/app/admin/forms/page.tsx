@@ -79,14 +79,14 @@ export default function FormsPage() {
   };
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-6 py-8">
-      <div className="mb-6 flex items-center justify-between">
+    <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Formularios</h1>
           <p className="text-sm text-zinc-600">Crea, edita y publica los formularios de preonboarding.</p>
         </div>
         {!creating && (
-          <Button variant="primary" onClick={openCreate}>
+          <Button variant="primary" className="self-start sm:self-auto" onClick={openCreate}>
             Nuevo formulario
           </Button>
         )}
@@ -94,7 +94,7 @@ export default function FormsPage() {
 
       {creating && (
         <section className="mb-6 space-y-4 rounded-lg border border-zinc-200 bg-white p-4">
-          <form onSubmit={create} className="flex gap-2">
+          <form onSubmit={create} className="flex flex-col gap-2 sm:flex-row">
             <Input
               autoFocus
               aria-label="Nombre del formulario"
@@ -141,13 +141,13 @@ export default function FormsPage() {
         </section>
       )}
 
-      <div className="mb-4 flex gap-1 border-b border-zinc-200">
+      <div className="mb-4 flex gap-1 overflow-x-auto border-b border-zinc-200">
         {TABS.map((t) => (
           <button
             key={t.value}
             onClick={() => setTab(t.value)}
             className={cn(
-              "-mb-px border-b-2 px-3 py-2 text-sm",
+              "-mb-px shrink-0 border-b-2 px-3 py-2 text-sm",
               tab === t.value ? "border-zinc-900 font-medium text-zinc-900" : "border-transparent text-zinc-500 hover:text-zinc-800",
             )}
           >
@@ -167,7 +167,7 @@ export default function FormsPage() {
       ) : (
         <ul className="divide-y divide-zinc-200 rounded-lg border border-zinc-200 bg-white">
           {forms.map((f) => (
-            <li key={f.id} className="flex items-center gap-4 px-4 py-3">
+            <li key={f.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
               <div className="min-w-0 flex-1">
                 <Link href={`/admin/forms/${f.id}`} className="font-medium hover:underline">
                   {f.title}
@@ -177,7 +177,7 @@ export default function FormsPage() {
                   <span>Editado {formatDate(f.updatedAt)}</span>
                 </div>
               </div>
-              <div className="flex gap-1">
+              <div className="-ml-2.5 flex flex-wrap gap-1 sm:ml-0">
                 {f.status === "published" && (
                   <Link
                     href={`/admin/forms/${f.id}/enlaces`}
