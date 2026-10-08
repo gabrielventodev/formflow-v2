@@ -25,7 +25,7 @@ import { LivenessReview } from "@/components/admin/liveness-review";
 import { formatAnswer, isDisplay, type Field } from "@/lib/form-schema";
 
 // Types whose stored value needs formatting to read well (codes, amounts, objects).
-const FORMATTED = new Set(["currency", "country", "address", "datetime", "scale"]);
+const FORMATTED = new Set(["phone", "currency", "country", "address", "datetime", "scale"]);
 
 const ACTION_BUTTON: Record<string, { label: string; className: string }> = {
   in_review: { label: "Tomar para revisión", className: "btn" },

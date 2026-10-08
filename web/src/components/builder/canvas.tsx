@@ -19,7 +19,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { Copy, GitBranch, GripVertical, Plus, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Badge, Button } from "@/components/ui";
-import { typeLabel, type FormSchema } from "@/lib/form-schema";
+import { DEFAULT_PHONE_COUNTRY, typeLabel, type FormSchema } from "@/lib/form-schema";
 import { cn } from "@/lib/utils";
 import { move, moveField, type Selection } from "./ops";
 
@@ -144,6 +144,7 @@ export function Canvas({
                                     <span className="truncate font-mono text-zinc-400">{f.key}</span>
                                     {f.type === "repeater" && <span>· {f.fields?.length ?? 0} campos</span>}
                                     {f.type === "currency" && f.currency && <span>· {f.currency}</span>}
+                                    {f.type === "phone" && <span>· {f.defaultCountry ?? DEFAULT_PHONE_COUNTRY}</span>}
                                     {f.type === "scale" && <span>· {f.min ?? 1} a {f.max ?? 5}</span>}
                                   </div>
                                 </div>

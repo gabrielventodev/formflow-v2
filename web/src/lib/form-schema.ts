@@ -1,3 +1,5 @@
+import { isSupportedCountry, isValidPhoneNumber, parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js/max";
+
 // Shape of a form, mirrored from api/internal/schema/schema.go. Keep both in sync.
 
 export type FieldType =
@@ -55,6 +57,8 @@ export type Field = {
   maxMb?: number;
   idKind?: IdKind;
   currency?: string;
+  /** Phone fields: ISO alpha-2 country the number starts in. */
+  defaultCountry?: string;
   fields?: Field[];
   showIf?: Condition;
 };
@@ -170,6 +174,35 @@ export function countriesByName(): { code: string; name: string }[] {
   return COUNTRY_CODES.map((code) => ({ code, name: countryName(code) })).sort((a, b) => a.name.localeCompare(b.name, "es"));
 }
 
+/** Where a phone field starts when the form doesn't set a country. Mirrors api/internal/schema/phone.go. */
+export const DEFAULT_PHONE_COUNTRY = "CL";
+
+/**
+ * Whether v is a real phone number. The portal stores E.164 ("+56961234567"); numbers typed
+ * before the country picker ("+56 9 6123 4567", or local ones read in the field's country) still
+ * pass. Mirrors ValidPhone in api/internal/schema/phone.go.
+ */
+export function validPhone(v: string, country?: string): boolean {
+  if (!/^\+?[\d\s().-]+$/.test(v)) return false;
+  try {
+    return isValidPhoneNumber(v, (country || DEFAULT_PHONE_COUNTRY) as CountryCode);
+  } catch {
+    return false;
+  }
+}
+
+/** Countries a phone field can start in: those with a calling code. Mirrors PhoneCountry in phone.go. */
+export function phoneCountries(): { code: string; name: string }[] {
+  return countriesByName().filter((c) => isSupportedCountry(c.code));
+}
+
+/** A phone answer as "+56 9 6123 4567"; anything unparseable is shown as typed. */
+export function formatPhone(v: unknown, country?: string): string {
+  const s = String(v);
+  const p = parsePhoneNumberFromString(s, (country || DEFAULT_PHONE_COUNTRY) as CountryCode);
+  return p?.isValid() ? p.formatInternational() : s;
+}
+
 export const YES_NO = ["Sí", "No"];
 
 export type Address = {
@@ -220,7 +253,7 @@ export function formatAmount(v: unknown, currency?: string): string {
  * Answer as plain text for summaries and the admin panel; "" when unanswered. File, repeater
  * and signature answers need their own rendering.
  */
-export function formatAnswer(f: Pick<Field, "type" | "currency" | "min" | "max">, v: unknown): string {
+export function formatAnswer(f: Pick<Field, "type" | "currency" | "defaultCountry" | "min" | "max">, v: unknown): string {
   if (f.type === "checkbox" && v === false) return "No";
   if (isEmpty(v)) return "";
   switch (f.type) {
@@ -237,6 +270,8 @@ export function formatAnswer(f: Pick<Field, "type" | "currency" | "min" | "max">
     }
     case "currency":
       return formatAmount(v, f.currency);
+    case "phone":
+      return formatPhone(v, f.defaultCountry);
     case "country":
       return countryName(String(v));
     case "address":
@@ -319,6 +354,7 @@ export function newField(type: FieldType, taken: Set<string>): Field {
   const f: Field = { key: uniqueKey(slugify(label), taken), type, label };
   if (type === "select" || type === "multiselect" || type === "radio") f.options = ["Opción 1", "Opción 2"];
   if (type === "currency") f.currency = "CLP";
+  if (type === "phone") f.defaultCountry = DEFAULT_PHONE_COUNTRY;
   if (type === "scale") {
     f.min = 1;
     f.max = 5;
@@ -422,7 +458,7 @@ export function validateAnswer(f: Field, v: unknown): string | null {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v))) return "Email no válido";
       break;
     case "phone":
-      if (!/^\+?[\d\s()-]{6,20}$/.test(String(v))) return "Teléfono no válido";
+      if (!validPhone(String(v), f.defaultCountry)) return "Teléfono no válido";
       break;
     case "number": {
       const n = Number(v);

@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { Button, Checkbox, Input, Select, Textarea } from "@/components/ui";
+import { PhoneInput } from "@/components/phone-input";
 import { SignaturePad } from "@/components/signature-pad";
 import { LivenessPreview } from "@/components/portal/liveness-field";
 import {
@@ -208,6 +209,9 @@ export function FieldInput({
         />
       );
       break;
+    case "phone":
+      input = <PhoneInput id={id} value={str} defaultCountry={f.defaultCountry} disabled={disabled} onChange={onChange} />;
+      break;
     case "country":
       input = <CountrySelect id={id} value={str} disabled={disabled} onChange={onChange} />;
       break;
@@ -398,7 +402,7 @@ export function FieldInput({
     }
     default: {
       const type =
-        { email: "email", phone: "tel", number: "number", date: "date", time: "time", datetime: "datetime-local" }[f.type as string] ??
+        { email: "email", number: "number", date: "date", time: "time", datetime: "datetime-local" }[f.type as string] ??
         "text";
       input = (
         <Input
