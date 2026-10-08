@@ -49,6 +49,10 @@ make web    # Next.js en :3000
 
 Requisitos: Go 1.26+, Node 22+, Docker.
 
+### Ambiente de prueba en internet
+
+Para subirlo a un servidor con https (por ejemplo una VM de Google Cloud) usa `docker-compose.prod.yml` y sigue la guía [docs/despliegue-gcp.md](docs/despliegue-gcp.md).
+
 ### Desde VS Code
 
 En **Run and Debug** elige **Formsis: API + Web** y pulsa F5. Levanta Postgres con Docker, arranca la API en Go con el depurador (breakpoints incluidos) y Next.js en modo desarrollo, y abre el navegador al estar lista. También puedes lanzar **API (Go)** o **Web (Next.js)** por separado. Necesitas la extensión de Go (`golang.go`) con Delve; VS Code la sugiere al abrir el repo. Si la API no arranca, actualiza Go a 1.26 y ejecuta **Go: Install/Update Tools** para que Delve quede compilado con esa versión.

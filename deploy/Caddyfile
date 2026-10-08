@@ -1,0 +1,18 @@
+# Caddy pide y renueva solo el certificado https (Let's Encrypt) para el dominio.
+# La web de Next.js atiende todo, incluida la API en /api/v1 (la reenvía a la API en Go).
+{$DOMINIO} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	request_body {
+		max_size 60MB
+	}
+
+	reverse_proxy web:3000
+}
