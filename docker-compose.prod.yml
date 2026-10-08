@@ -1,0 +1,119 @@
+# Producción en un solo servidor (VM de Google Cloud, VPS, etc.).
+# Solo Caddy queda expuesto a internet (80 y 443, con https automático); el resto
+# de los servicios hablan por la red interna de Docker.
+#
+#   cp deploy/.env.prod.example .env    # y completa los valores
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Guía paso a paso: docs/despliegue-gcp.md
+
+name: formsis
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      DOMINIO: ${DOMINIO:?Falta DOMINIO en .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+    logging: *logging
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: formsis
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD en .env}
+      POSTGRES_DB: formsis
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U formsis"]
+      interval: 5s
+      retries: 10
+    logging: *logging
+
+  storage:
+    # Fork compatible de MinIO (las imágenes oficiales ya no se publican).
+    image: pgsty/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Falta MINIO_ROOT_USER en .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Falta MINIO_ROOT_PASSWORD en .env}
+    volumes:
+      - storage:/data
+    # La consola queda solo en el propio servidor; ábrela con un túnel SSH (ver la guía).
+    ports:
+      - "127.0.0.1:9001:9001"
+    logging: *logging
+
+  api:
+    build: ./api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://formsis:${POSTGRES_PASSWORD}@db:5432/formsis?sslmode=disable
+      WEB_ORIGIN: https://${DOMINIO}
+      WEB_PUBLIC_URL: https://${DOMINIO}
+      COOKIE_SECURE: "true"
+      STORAGE_DRIVER: s3
+      S3_ENDPOINT: storage:9000
+      S3_BUCKET: formsis
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-Formsis <no-reply@localhost>}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?Falta ADMIN_EMAIL en .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Falta ADMIN_PASSWORD en .env}
+      ORG_NAME: ${ORG_NAME:-Mi organización}
+      FACE_URL: http://face:8000
+      FACE_TOKEN: ${FACE_TOKEN:?Falta FACE_TOKEN en .env}
+    depends_on:
+      db:
+        condition: service_healthy
+      storage:
+        condition: service_started
+      face:
+        condition: service_started
+    logging: *logging
+
+  face:
+    build: ./face
+    restart: unless-stopped
+    environment:
+      FACE_TOKEN: ${FACE_TOKEN}
+    logging: *logging
+
+  web:
+    build: ./web
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:8080
+      HOSTNAME: 0.0.0.0
+    depends_on:
+      - api
+    logging: *logging
+
+volumes:
+  pgdata:
+  storage:
+  caddy_data:
+  caddy_config:
