@@ -6,13 +6,17 @@ import { Button, Checkbox, Input, Label, Select, Textarea } from "@/components/u
 import {
   CONDITION_OPS,
   CURRENCIES,
+  DEFAULT_PHONE_COUNTRY,
   FIELD_TYPES,
   FILE_ACCEPT,
+  FREQUENT_COUNTRIES,
   ID_KINDS,
   allKeys,
+  countryName,
   fieldOptions,
   isDisplay,
   fieldsBefore,
+  phoneCountries,
   slugify,
   typeLabel,
   uniqueKey,
@@ -142,7 +146,8 @@ function FieldProps({ schema, sel, field, published, problems, onChange, onSelec
 
   const [optionsText, setOptionsText] = useState((field.options ?? []).join("\n"));
   const num = (v: string) => (v === "" ? undefined : Number(v));
-  const isText = ["text", "textarea", "email", "phone", "id", "url", "currency"].includes(field.type);
+  // Phone fields show an example number of the chosen country instead.
+  const isText = ["text", "textarea", "email", "id", "url", "currency"].includes(field.type);
   const isInfo = field.type === "info" || field.type === "heading";
   const display = isDisplay(field.type);
   const bare = field.type === "divider" || field.type === "spacer";
@@ -228,6 +233,34 @@ function FieldProps({ schema, sel, field, published, problems, onChange, onSelec
                 {k.label}
               </option>
             ))}
+          </Select>
+        </div>
+      )}
+
+      {field.type === "phone" && (
+        <div>
+          <Label htmlFor="f-country" hint="(el solicitante puede cambiarlo)">
+            País por defecto
+          </Label>
+          <Select
+            id="f-country"
+            value={field.defaultCountry ?? DEFAULT_PHONE_COUNTRY}
+            onChange={(e) => set({ defaultCountry: e.target.value })}
+          >
+            <optgroup label="Frecuentes">
+              {FREQUENT_COUNTRIES.map((c) => (
+                <option key={c} value={c}>
+                  {countryName(c)}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Todos los países">
+              {phoneCountries().map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
+              ))}
+            </optgroup>
           </Select>
         </div>
       )}
