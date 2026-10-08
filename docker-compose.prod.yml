@@ -50,7 +50,7 @@ services:
 
   storage:
     # Fork compatible de MinIO (las imágenes oficiales ya no se publican).
-    image: pgsty/minio:latest
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -76,7 +76,7 @@ services:
       S3_BUCKET: formsis
       S3_ACCESS_KEY: ${MINIO_ROOT_USER}
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_HOST: ${SMTP_HOST:?Falta SMTP_HOST en .env (sin SMTP los enlaces de acceso quedarían en el log)}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USERNAME: ${SMTP_USERNAME:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}

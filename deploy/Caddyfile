@@ -3,11 +3,20 @@
 {$DOMINIO} {
 	encode zstd gzip
 
+	# Cabeceras de seguridad. La CSP deja todo en el mismo dominio y permite:
+	# - 'unsafe-inline' en scripts y estilos, porque Next.js mete scripts en línea al renderizar;
+	# - data: y blob: en imágenes, para el QR de la prueba de vida y las miniaturas de archivos subidos;
+	# - blob: en object/frame/media, para abrir en otra pestaña los PDF e imágenes subidos.
+	# La cámara de la prueba de vida la controla Permissions-Policy (camera=(self)), no la CSP.
 	header {
-		Strict-Transport-Security "max-age=31536000"
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
 		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=()"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' blob:; object-src 'self' blob:; frame-src 'self' blob:; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 		-Server
+		-X-Powered-By
 	}
 
 	request_body {
