@@ -233,7 +233,7 @@ export default function SubmissionPage() {
 
   const fieldLabels = useMemo(() => {
     const m = new Map<string, string>();
-    for (const sec of detail?.schema.sections ?? []) for (const f of sec.fields ?? []) m.set(f.key, f.label ?? f.key);
+    for (const sec of detail?.schema.sections ?? []) for (const f of sec.fields ?? []) if (!isDisplay(f.type)) m.set(f.key, f.label ?? f.key);
     return m;
   }, [detail]);
 
