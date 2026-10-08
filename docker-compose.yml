@@ -18,7 +18,7 @@ services:
 
   storage:
     # MinIO dejó de publicar imágenes (minio/minio y quay.io ya no se pueden bajar); pgsty/minio es un fork compatible.
-    image: pgsty/minio:latest
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-formsis}
