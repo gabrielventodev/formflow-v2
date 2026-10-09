@@ -21,12 +21,16 @@ services:
     restart: unless-stopped
     environment:
       DOMINIO: ${DOMINIO:?Falta DOMINIO en .env}
+      # Dominio del sitio de presentación (repo formsis-web); www redirige a él.
+      DOMINIO_WEB: ${DOMINIO_WEB:-formsis.com}
     ports:
       - "80:80"
       - "443:443"
       - "443:443/udp"
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Sitio de presentación: repo aparte (gabrielventodev/formsis-web) clonado al lado de este.
+      - ../formsis-web:/srv/sitio:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:

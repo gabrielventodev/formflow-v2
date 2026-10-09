@@ -178,6 +178,21 @@ Para apagarlo, borra la línea `deploy-github` de `~/.ssh/authorized_keys` en la
 
 **Ojo con el backend:** un merge en `formsis-backend` no despliega nada por sí solo. Se despliega cuando `formsis-v2` actualiza el submódulo `api` y ese cambio llega a `main`.
 
+## Sitio de presentación (formsis.com)
+
+La web pública de Formsis (inicio interactivo, `/informacion`, `/terminos` y `/privacidad`) vive en su propio repo, [gabrielventodev/formsis-web](https://github.com/gabrielventodev/formsis-web). `deploy/actualizar.sh` lo clona en `~/formsis-web` (al lado de este repo) y lo actualiza en cada deploy; Caddy lo sirve en el dominio `DOMINIO_WEB` (por defecto `formsis.com`) y redirige `www` a ese dominio. La app sigue en `DOMINIO`.
+
+Para que funcione, en Namecheap (Domain List → Manage → Advanced DNS) agrega dos registros apuntando a la IP fija del servidor:
+
+| Tipo | Host | Valor |
+|---|---|---|
+| A Record | `@` | IP del servidor |
+| A Record | `www` | IP del servidor |
+
+Borra antes cualquier registro de `@` o `www` que ya exista (por ejemplo el "URL Redirect" o el "CNAME" de parking que Namecheap crea por defecto). Cuando el DNS propague, Caddy obtiene el certificado solo; si tarda, `docker compose -f docker-compose.prod.yml restart caddy`.
+
+Cada push a `main` de formsis-web se publica solo si ese repo tiene los mismos cuatro secretos `DEPLOY_*` de la sección anterior (Settings → Secrets and variables → Actions). Sin ellos, el sitio se actualiza en el próximo deploy de este repo.
+
 ## Operación del día a día
 
 **Actualizar a la última versión** (después de mezclar cambios en `main`). Si configuraste el [deploy automático](#deploy-automático) no hace falta; si no, o para forzarlo a mano:
