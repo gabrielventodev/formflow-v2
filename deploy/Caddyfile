@@ -25,3 +25,37 @@
 
 	reverse_proxy web:3000
 }
+
+# Sitio de presentación (HTML estático de sitio/) en el dominio raíz, por defecto formsis.com.
+# Necesita en el DNS un registro A de @ (y de www) a la IP del servidor; mientras no exista,
+# Caddy solo reintenta el certificado de este dominio y la app sigue funcionando igual.
+{$DOMINIO_WEB} {
+	encode zstd gzip
+
+	# Sin scripts ni estilos en línea, así que la CSP es más estricta que la de la app.
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		-Server
+	}
+	@recursos path /fuentes/* /img/* /estilos.css /app.js
+	header @recursos Cache-Control "public, max-age=3600"
+
+	root * /srv/sitio
+	# URLs sin .html: /terminos sirve terminos.html.
+	try_files {path} {path}.html
+	file_server
+
+	handle_errors {
+		rewrite * /404.html
+		file_server
+	}
+}
+
+www.{$DOMINIO_WEB} {
+	redir https://{$DOMINIO_WEB}{uri} permanent
+}

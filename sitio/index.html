@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Formsis · Del formulario a la aprobación</title>
+  <meta name="description" content="Formsis es la plataforma de onboarding digital para empresas y personas: crea formularios, compártelos con un enlace, verifica identidad con prueba de vida y aprueba en equipo.">
+  <meta name="theme-color" content="#0f1c2e">
+  <meta property="og:title" content="Formsis · Del formulario a la aprobación">
+  <meta property="og:description" content="Onboarding digital de clientes: formularios, prueba de vida y aprobaciones en un solo lugar.">
+  <meta property="og:image" content="/img/formsis-icono-512.png">
+  <meta property="og:locale" content="es_CL">
+  <link rel="icon" href="/img/formsis-simbolo.svg" type="image/svg+xml">
+  <link rel="icon" href="/img/formsis-icono-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/img/formsis-icono-180.png">
+  <link rel="preload" href="/fuentes/schibsted.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fuentes/figtree.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/estilos.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
+<header class="nav" id="nav">
+  <div class="envoltura">
+    <a class="nav-logo" href="/" aria-label="Formsis, inicio"><img src="/img/formsis-logo-negativo.svg" alt="Formsis" width="128" height="30"></a>
+    <nav class="nav-links" aria-label="Principal">
+      <a href="#como">Cómo funciona</a>
+      <a href="#vida">Prueba de vida</a>
+      <a href="/informacion">Todo sobre Formsis</a>
+      <a class="boton boton-linea boton-chico" href="https://prueba.formsis.com/admin">Entrar</a>
+      <a class="boton boton-sello boton-chico" href="mailto:contacto@formsis.com?subject=Quiero%20una%20demo%20de%20Formsis">Pedir demo</a>
+    </nav>
+  </div>
+  <div class="progreso" id="progreso"></div>
+</header>
+
+<main id="contenido">
+
+  <!-- 1. Hero: arma un formulario y apruébalo -->
+  <section class="hero oscuro">
+    <canvas id="campo" aria-hidden="true"></canvas>
+    <div class="envoltura hero-grid">
+      <div>
+        <p class="antetitulo">Onboarding digital · KYB · KYC</p>
+        <h1>
+          <span class="linea">Del formulario</span>
+          <span class="linea">a la</span>
+          <span class="linea"><span class="aprob">aprobación<svg viewBox="0 0 300 30" preserveAspectRatio="none" aria-hidden="true"><path d="M4 20 C 70 6, 150 4, 296 14"/></svg></span>.</span>
+        </h1>
+        <p class="bajada">Crea, comparte, verifica y aprueba. Sin PDFs por correo.</p>
+        <div class="hero-cta">
+          <a class="boton boton-sello" href="mailto:contacto@formsis.com?subject=Quiero%20una%20demo%20de%20Formsis">Pedir una demo
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="boton boton-linea" href="#como">Ver cómo funciona</a>
+        </div>
+        <div class="hero-sellos"><span>Biometría propia</span><span>Datos en tu servidor</span><span>Hecho en Latinoamérica</span></div>
+      </div>
+
+      <div class="juguete" aria-label="Prueba: arma un formulario">
+        <div class="chips" id="chips" role="group" aria-label="Toca o arrastra un campo para agregarlo">
+          <button class="chip" draggable="true" data-campo="nombre"><span class="glifo">Aa</span>Nombre</button>
+          <button class="chip" draggable="true" data-campo="rut"><span class="glifo">K</span>RUT</button>
+          <button class="chip" draggable="true" data-campo="telefono"><span class="glifo">+56</span>Teléfono</button>
+          <button class="chip" draggable="true" data-campo="documento"><span class="glifo">.pdf</span>Documento</button>
+          <button class="chip" draggable="true" data-campo="firma"><span class="glifo">~</span>Firma</button>
+          <button class="chip" draggable="true" data-campo="vida"><span class="glifo">◎</span>Prueba de vida</button>
+        </div>
+        <div class="ficha" id="ficha">
+          <div class="ficha-cabeza">
+            <strong>Alta de cliente</strong>
+            <span class="estado" id="estadoFicha">Borrador</span>
+          </div>
+          <div class="barra"><i id="barraFicha"></i></div>
+          <ul class="campos" id="campos" aria-live="polite">
+            <li class="vacio" id="vacio"><span class="mono">+</span>Toca o arrastra campos aquí</li>
+          </ul>
+          <div class="ficha-pie">
+            <small id="contador">0 campos</small>
+            <button class="enviar" id="enviar" disabled>Enviar</button>
+          </div>
+          <div class="timbre" aria-hidden="true">
+            <svg class="sello-circ" viewBox="0 0 200 200">
+              <defs><path id="circTexto" d="M100 100 m-74 0 a74 74 0 1 1 148 0 a74 74 0 1 1 -148 0"/></defs>
+              <circle cx="100" cy="100" r="94" fill="none" stroke="#0b7a50" stroke-width="5"/>
+              <circle cx="100" cy="100" r="58" fill="#22c17f"/>
+              <path d="M74 101l18 18 36-38" fill="none" stroke="#0f1c2e" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+              <text font-family="IBM Plex Mono, monospace" font-size="15" font-weight="500" letter-spacing="5" fill="#0b7a50"><textPath href="#circTexto">APROBADO · FORMSIS · APROBADO · FORMSIS ·</textPath></text>
+            </svg>
+            <button class="boton boton-tinta boton-chico reiniciar" id="reiniciar">Armar otro</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Cómo funciona -->
+  <section class="seccion" id="como">
+    <div class="envoltura">
+      <p class="antetitulo aparece">Cómo funciona</p>
+      <h2 class="titulo aparece" data-retraso="1">Cuatro pasos.<br>Cero papeles.</h2>
+      <div class="relato">
+        <ol class="pasos" id="pasos">
+          <li class="paso" data-escena="0"><span class="num">01</span><h3>Crea</h3><p>Arrastra campos. Publica en minutos.</p></li>
+          <li class="paso" data-escena="1"><span class="num">02</span><h3>Comparte</h3><p>Un enlace o un QR. Sin cuentas ni contraseñas.</p></li>
+          <li class="paso" data-escena="2"><span class="num">03</span><h3>Verifica</h3><p>Prueba de vida con la cámara del celular.</p></li>
+          <li class="paso" data-escena="3"><span class="num">04</span><h3>Aprueba</h3><p>En equipo, por niveles, con historial.</p></li>
+        </ol>
+        <div class="escenario-col">
+          <div class="escenario">
+            <div class="pantalla" aria-hidden="true">
+              <div class="escena on">
+                <div class="constructor">
+                  <div class="paleta"><span>Aa Texto</span><span>K RUT</span><span>@ Email</span><span>$ Monto</span><span>.pdf</span><span>~ Firma</span></div>
+                  <div class="lienzo">
+                    <div class="fila"><b></b><i></i></div>
+                    <div class="fila sel"><b></b><i></i></div>
+                    <div class="fila"><b></b><i></i></div>
+                    <div class="fila"><b></b><i></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="escena">
+                <div class="compartir">
+                  <div class="enlace">formsis.com/f/<b>alta-cliente</b></div>
+                  <div class="qr" id="qr"></div>
+                  <div class="avion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>Enlace mágico enviado</div>
+                </div>
+              </div>
+              <div class="escena">
+                <div class="verifica">
+                  <svg viewBox="0 0 240 300">
+                    <defs>
+                      <linearGradient id="gradBarrido" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#22c17f" stop-opacity="0"/><stop offset="1" stop-color="#22c17f" stop-opacity="0.45"/></linearGradient>
+                      <clipPath id="clipOvalo"><ellipse cx="120" cy="145" rx="92" ry="122"/></clipPath>
+                    </defs>
+                    <ellipse cx="120" cy="145" rx="92" ry="122" fill="#1d324d"/>
+                    <g clip-path="url(#clipOvalo)">
+                      <ellipse cx="120" cy="128" rx="50" ry="62" fill="#2c4566"/>
+                      <ellipse cx="120" cy="300" rx="96" ry="80" fill="#2c4566"/>
+                      <rect class="barrido" x="20" y="-10" width="200" height="40"/>
+                    </g>
+                    <ellipse class="anillo" cx="120" cy="145" rx="100" ry="130"/>
+                    <circle class="hito" cx="101" cy="120" r="3.2"/>
+                    <circle class="hito" cx="139" cy="120" r="3.2"/>
+                    <circle class="hito" cx="120" cy="140" r="3.2"/>
+                    <circle class="hito" cx="106" cy="160" r="3.2"/>
+                    <circle class="hito" cx="134" cy="160" r="3.2"/>
+                  </svg>
+                  <span class="veredicto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Persona real</span>
+                </div>
+              </div>
+              <div class="escena">
+                <div class="cadena" id="cadena">
+                  <div class="nivel"><span class="nodo"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span><b>Comercial<small>Valentina M.</small></b><span class="mono">09:12</span></div>
+                  <div class="union"></div>
+                  <div class="nivel"><span class="nodo"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span><b>Cumplimiento<small>Diego R.</small></b><span class="mono">10:47</span></div>
+                  <div class="union"></div>
+                  <div class="nivel"><span class="nodo"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span><b>Gerencia<small>Ana P.</small></b><span class="mono">11:03</span></div>
+                  <span class="estado" data-e="revision" id="estadoCadena">En revisión</span>
+                </div>
+              </div>
+            </div>
+            <div class="puntos-paso" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Tipos de campo -->
+  <section class="seccion oscuro" id="campos-tipos">
+    <div class="envoltura">
+      <div class="tipos-cabeza">
+        <div>
+          <p class="antetitulo aparece">Constructor de formularios</p>
+          <h2 class="titulo aparece" data-retraso="1">Tipos de campo<br>para todo.</h2>
+        </div>
+        <div class="cifra aparece" data-retraso="2" aria-hidden="true"><span data-cuenta="27">27</span></div>
+      </div>
+      <div class="rejilla" id="rejilla">
+        <div class="tipo"><span class="g">Aa</span><span>Texto corto</span></div>
+        <div class="tipo"><span class="g">¶</span><span>Texto largo</span></div>
+        <div class="tipo"><span class="g">@</span><span>Email</span></div>
+        <div class="tipo"><span class="g">+56</span><span>Teléfono</span></div>
+        <div class="tipo"><span class="g">://</span><span>Sitio web</span></div>
+        <div class="tipo"><span class="g">#12</span><span>Dirección</span></div>
+        <div class="tipo"><span class="g">123</span><span>Número</span></div>
+        <div class="tipo"><span class="g">$</span><span>Monto</span></div>
+        <div class="tipo"><span class="g">31/12</span><span>Fecha</span></div>
+        <div class="tipo"><span class="g">09:30</span><span>Hora</span></div>
+        <div class="tipo"><span class="g">31·09</span><span>Fecha y hora</span></div>
+        <div class="tipo"><span class="g">1–5</span><span>Escala</span></div>
+        <div class="tipo"><span class="g">Sí/No</span><span>Sí / No</span></div>
+        <div class="tipo"><span class="g">◉</span><span>Opción única</span></div>
+        <div class="tipo"><span class="g">▾</span><span>Lista desplegable</span></div>
+        <div class="tipo"><span class="g">☰</span><span>Selección múltiple</span></div>
+        <div class="tipo"><span class="g">☑</span><span>Casilla</span></div>
+        <div class="tipo"><span class="g">CL</span><span>País</span></div>
+        <div class="tipo"><span class="g">-K</span><span>RUT / DNI</span></div>
+        <div class="tipo"><span class="g">.pdf</span><span>Archivo</span></div>
+        <div class="tipo"><span class="g">~</span><span>Firma</span></div>
+        <div class="tipo"><span class="g">◎</span><span>Prueba de vida</span></div>
+        <div class="tipo"><span class="g">×n</span><span>Grupo repetible</span></div>
+        <div class="tipo diseno"><span class="g">H1</span><span>Título</span></div>
+        <div class="tipo diseno"><span class="g">—</span><span>Separador</span></div>
+        <div class="tipo diseno"><span class="g">↕</span><span>Espacio</span></div>
+        <div class="tipo diseno"><span class="g">i</span><span>Texto informativo</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Prueba de vida interactiva -->
+  <section class="seccion oscuro vida" id="vida">
+    <div class="envoltura vida-grid">
+      <div class="camara" id="camara" tabindex="0" role="application" aria-label="Demostración de prueba de vida. Mueve el cursor o el dedo hacia los lados, o usa las flechas izquierda y derecha." data-reto="izq">
+        <div class="esquinas" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div class="indicacion" id="indicacion">Gira a la izquierda</div>
+        <span class="flecha-izq" aria-hidden="true">←</span>
+        <span class="flecha-der" aria-hidden="true">→</span>
+        <div class="rostro" aria-hidden="true">
+          <svg viewBox="0 0 200 250">
+            <ellipse class="guia" cx="100" cy="125" rx="96" ry="121"/>
+            <ellipse class="cabeza" id="cabeza" cx="100" cy="122" rx="70" ry="92"/>
+            <g class="rasgos" id="rasgos">
+              <path d="M62 92 q14 -8 26 0"/>
+              <path d="M112 92 q14 -8 26 0"/>
+              <ellipse class="ojo" cx="76" cy="110" rx="7" ry="7.5" id="ojoI"/>
+              <ellipse class="ojo" cx="124" cy="110" rx="7" ry="7.5" id="ojoD"/>
+              <path d="M100 116 v26 q-4 4 -10 2"/>
+              <path d="M80 168 q20 14 40 0"/>
+              <g class="malla"><circle cx="76" cy="110" r="2.6"/><circle cx="124" cy="110" r="2.6"/><circle cx="100" cy="142" r="2.6"/><circle cx="82" cy="170" r="2.6"/><circle cx="118" cy="170" r="2.6"/></g>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <p class="antetitulo aparece">Prueba de vida</p>
+        <h2 class="titulo aparece" data-retraso="1">Pruébalo.<br>Mueve la cara.</h2>
+        <p class="bajada aparece" data-retraso="2">Mueve el cursor o el dedo sobre la cámara.</p>
+        <ol class="retos" id="retos">
+          <li data-reto="izq"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></i>Gira a la izquierda</li>
+          <li data-reto="der"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></i>Gira a la derecha</li>
+          <li data-reto="centro"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></i>Mira al frente</li>
+        </ol>
+        <div class="resultado-vida" id="resultadoVida" aria-live="polite"></div>
+        <div class="vida-notas">
+          <span class="etiqueta"><b>●</b> Motor propio</span>
+          <span class="etiqueta"><b>●</b> Sin enviar rostros a terceros</span>
+          <span class="etiqueta"><b>●</b> Del computador al celular con un QR</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Tu marca -->
+  <section class="seccion" id="marca">
+    <div class="envoltura marca-grid">
+      <div>
+        <p class="antetitulo aparece">Marca propia</p>
+        <h2 class="titulo aparece" data-retraso="1">Tu cliente ve<br>tu marca.</h2>
+        <p class="bajada aparece" data-retraso="2">Elige un color y mira el portal.</p>
+        <div class="muestras" id="muestras" role="group" aria-label="Colores de ejemplo">
+          <button class="muestra" data-c="#0f1c2e" data-n="Andes Capital" data-i="A" aria-pressed="true" aria-label="Tinta, Andes Capital"></button>
+          <button class="muestra" data-c="#1f4fd1" data-n="Banco Austral" data-i="B" aria-pressed="false" aria-label="Azul, Banco Austral"></button>
+          <button class="muestra" data-c="#6d28a8" data-n="Cooperativa Sur" data-i="C" aria-pressed="false" aria-label="Morado, Cooperativa Sur"></button>
+          <button class="muestra" data-c="#b3362e" data-n="Rumbo Seguros" data-i="R" aria-pressed="false" aria-label="Rojo, Rumbo Seguros"></button>
+          <button class="muestra" data-c="#0b7a50" data-n="Verde Leasing" data-i="V" aria-pressed="false" aria-label="Verde, Verde Leasing"></button>
+          <button class="muestra" data-c="#9a4a00" data-n="Cobre Factoring" data-i="F" aria-pressed="false" aria-label="Cobre, Cobre Factoring"></button>
+        </div>
+      </div>
+      <div class="portal aparece" id="portal" data-retraso="1">
+        <div class="portal-cabeza"><span class="portal-logo" id="portalLogo">A</span><strong id="portalNombre">Andes Capital</strong></div>
+        <div class="portal-cuerpo">
+          <div class="portal-pasos"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+          <span class="etq">Razón social</span>
+          <div class="caja">Comercial Los Robles SpA</div>
+          <span class="etq">RUT de la empresa</span>
+          <div class="caja">76.543.210-K</div>
+          <button class="boton-marca" tabindex="-1" aria-hidden="true">Siguiente</button>
+        </div>
+        <div class="portal-pie"><img src="/img/formsis-simbolo.svg" alt="">Con tecnología de Formsis</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Control -->
+  <section class="seccion" id="control">
+    <div class="envoltura">
+      <p class="antetitulo aparece">Panel de revisión</p>
+      <h2 class="titulo aparece" data-retraso="1">Todo bajo control.</h2>
+      <div class="mosaico">
+        <article class="tesela t-a aparece">
+          <div class="roles"><span class="rol"><i>D</i>Dueño</span><span class="rol"><i>A</i>Admin</span><span class="rol"><i>R</i>Revisor</span></div>
+          <div><h3>Tu equipo, con permisos.</h3><p>Cada uno ve lo que le toca.</p></div>
+        </article>
+        <article class="tesela t-b aparece" data-retraso="1">
+          <ol class="bitacora">
+            <li><span>11:03</span><b>aprobó</b> Ana P. · nivel 3</li>
+            <li><span>10:47</span><b>aprobó</b> Diego R. · nivel 2</li>
+            <li><span>10:15</span><b>reenvió</b> solicitante</li>
+            <li><span>09:58</span><b>observó</b> «Estatutos»</li>
+            <li><span>09:12</span><b>aprobó</b> Valentina M. · nivel 1</li>
+          </ol>
+          <div><h3>Historial de cada paso.</h3><p>Quién, qué y cuándo.</p></div>
+        </article>
+        <article class="tesela t-c aparece">
+          <div class="observado"><div class="caja">estatutos_2019.pdf</div><span class="nota">Falta la última modificación</span></div>
+          <div><h3>Correcciones campo a campo.</h3><p>El cliente solo edita lo observado.</p></div>
+        </article>
+        <article class="tesela t-d aparece" data-retraso="1">
+          <div class="niveles-mini" aria-hidden="true">
+            <i><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></i><b></b>
+            <i><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></i><b></b>
+            <i class="no"></i><b></b><i class="no"></i><b></b><i class="no"></i>
+          </div>
+          <div><h3>Hasta 5 niveles.</h3><p>Cuatro ojos garantizados.</p></div>
+        </article>
+        <article class="tesela t-e aparece" data-retraso="2">
+          <div class="exporta"><span>KYB empresa <b>plantilla</b></span><span>KYC persona <b>plantilla</b></span><span>envios.csv <b>exportar</b></span></div>
+          <div><h3>Plantillas y CSV.</h3><p>Empieza hoy, llévate tus datos.</p></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Conexión -->
+  <section class="seccion oscuro" id="conecta">
+    <div class="envoltura">
+      <p class="antetitulo aparece">Webhooks</p>
+      <h2 class="titulo aparece" data-retraso="1">Aprobado aquí.<br>Avisado allá.</h2>
+      <div class="conecta">
+        <div class="origen"><img src="/img/formsis-icono-180.png" alt="Formsis" width="84" height="84"></div>
+        <div class="cables" aria-hidden="true">
+          <svg viewBox="0 0 400 220" preserveAspectRatio="none" id="cables">
+            <path id="c0" d="M0 110 C 160 110, 240 30, 400 30"/>
+            <path id="c1" d="M0 110 C 160 110, 240 110, 400 110"/>
+            <path id="c2" d="M0 110 C 160 110, 240 190, 400 190"/>
+            </svg>
+          <span class="paquete" id="paquete"></span>
+        </div>
+        <div class="destinos">
+          <span class="destino" data-d="0">Tu CRM</span>
+          <span class="destino" data-d="1">Core</span>
+          <span class="destino" data-d="2">ERP</span>
+        </div>
+      </div>
+<pre class="carga-util" aria-label="Ejemplo de aviso"><span class="k">POST</span> https://tu-sistema.com/formsis
+<span class="k">FormFlow-Signature:</span> t=1760000000,v1=<span class="v">5f9c…e21a</span>
+
+{ <span class="k">"event"</span>: <span class="v">"submission.approved"</span>, <span class="k">"form"</span>: <span class="v">"Alta de cliente"</span> }</pre>
+    </div>
+  </section>
+
+  <!-- 8. Cierre -->
+  <section class="seccion oscuro cierre">
+    <img class="cierre-marca" src="/img/formsis-simbolo-claro.svg" alt="" aria-hidden="true">
+    <div class="envoltura">
+      <h2 class="titulo aparece">Tu próximo cliente, <em>aprobado hoy.</em></h2>
+      <div class="hero-cta aparece" data-retraso="1">
+        <a class="boton boton-sello" href="mailto:contacto@formsis.com?subject=Quiero%20una%20demo%20de%20Formsis">Pedir una demo
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="boton boton-linea" href="/informacion">Leer todo sobre Formsis</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="pie">
+  <div class="envoltura">
+    <div class="pie-grid">
+      <img src="/img/formsis-logo-negativo.svg" alt="Formsis" width="120" height="28">
+      <nav aria-label="Pie de página">
+        <a href="/informacion">Información</a>
+        <a href="/terminos">Términos y condiciones</a>
+        <a href="/privacidad">Política de privacidad</a>
+        <a href="mailto:contacto@formsis.com">contacto@formsis.com</a>
+      </nav>
+    </div>
+    <div class="pie-legal"><span>© <span id="anio">2026</span> Formsis</span><span class="mono">Del formulario a la aprobación.</span></div>
+  </div>
+</footer>
+</body>
+</html>
