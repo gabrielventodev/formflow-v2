@@ -1,14 +1,13 @@
-# Ambientes de prueba (QA y dev) en el mismo servidor que producción.
-# Reutiliza los servicios de docker-compose.prod.yml, cada ambiente con su propia base,
+# Ambiente de QA en el mismo servidor que producción.
+# Reutiliza los servicios de docker-compose.prod.yml, con su propia base,
 # sus archivos y sus secretos (en el .env de su carpeta), pero sin Caddy: lo atiende el
-# Caddy de producción, que llega a la web de este ambiente por la red compartida "formsis-borde".
+# Caddy de producción, que llega a la web de QA por la red compartida "formsis-borde".
 #
-# Cada ambiente vive en su propia carpeta clonada de su rama (ver docs/ambientes.md):
-#   ~/formsis-v2-qa   (rama qa,  .env con AMBIENTE=qa)
-#   ~/formsis-v2-dev  (rama dev, .env con AMBIENTE=dev)
-# y se actualiza con deploy/actualizar.sh, que usa el proyecto "formsis-qa" o "formsis-dev".
+# Vive en su propia carpeta clonada de la rama qa (ver docs/ambientes.md):
+#   ~/formsis-v2-qa   (.env con AMBIENTE=qa)
+# y se actualiza con deploy/actualizar.sh, que usa el proyecto "formsis-qa".
 
-name: formsis-${AMBIENTE:?Falta AMBIENTE en .env (qa o dev)}
+name: formsis-${AMBIENTE:?Falta AMBIENTE en .env (qa)}
 
 services:
   db:

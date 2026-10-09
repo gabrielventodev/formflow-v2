@@ -6,8 +6,8 @@
 #   docker compose -f docker-compose.prod.yml up -d --build
 #
 # Este archivo levanta producción y el Caddy que atiende a todos los ambientes.
-# QA y dev usan docker-compose.ambiente.yml, que reutiliza estos mismos servicios
-# (cada uno con su base, sus archivos y sus secretos) sin un segundo Caddy.
+# QA usa docker-compose.ambiente.yml, que reutiliza estos mismos servicios
+# (con su propia base, sus archivos y sus secretos) sin un segundo Caddy.
 #
 # Guías paso a paso: docs/despliegue-gcp.md y docs/ambientes.md
 
@@ -29,10 +29,9 @@ services:
       DOMINIO_ANTERIOR: ${DOMINIO_ANTERIOR:-}
       # Dominio del sitio de presentación (repo formsis-web); www redirige a él.
       DOMINIO_WEB: ${DOMINIO_WEB:-formsis.com}
-      # Ambientes de prueba, solo accesibles desde IPS_PERMITIDAS (ver docs/ambientes.md).
+      # Ambiente de QA, solo accesible desde IPS_PERMITIDAS (ver docs/ambientes.md).
       DOMINIO_QA: ${DOMINIO_QA:-qa.formsis.com}
-      DOMINIO_DEV: ${DOMINIO_DEV:-dev.formsis.com}
-      # IPs o rangos (separados por espacios) que pueden entrar a QA y dev. Sin definir, nadie entra.
+      # IPs o rangos (separados por espacios) que pueden entrar a QA. Sin definir, nadie entra.
       IPS_PERMITIDAS: ${IPS_PERMITIDAS:-127.0.0.1/32}
     ports:
       - "80:80"
@@ -77,7 +76,7 @@ services:
     volumes:
       - storage:/data
     # La consola queda solo en el propio servidor; ábrela con un túnel SSH (ver la guía).
-    # Cada ambiente usa otro puerto (QA 9002, dev 9003) para no chocar.
+    # QA usa otro puerto (9002) para no chocar.
     ports:
       - "127.0.0.1:${PUERTO_CONSOLA_MINIO:-9001}:9001"
     logging: *logging
@@ -127,8 +126,8 @@ services:
     environment:
       API_URL: http://api:8080
       HOSTNAME: 0.0.0.0
-    # La red "borde" la comparten los tres ambientes con Caddy, que llega a cada web por su
-    # alias (web-prod, web-qa, web-dev). El resto de los servicios queda en la red propia del ambiente.
+    # La red "borde" la comparten los dos ambientes con Caddy, que llega a cada web por su
+    # alias (web-prod, web-qa). El resto de los servicios queda en la red propia del ambiente.
     networks:
       default:
       borde:
@@ -139,7 +138,7 @@ services:
     logging: *logging
 
 networks:
-  # La crea producción; QA y dev se suman a ella (en docker-compose.ambiente.yml es "external").
+  # La crea producción; QA se suma a ella (en docker-compose.ambiente.yml es "external").
   borde:
     name: formsis-borde
 

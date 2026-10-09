@@ -1,6 +1,6 @@
 # Plan de respaldos: 5 capas por cliente
 
-Plan para el ambiente productivo de cada cliente, sea en nuestros servidores o en los suyos. Todavía no está implementado: es la referencia para cuando entre el primer cliente. QA y dev no se respaldan (sus datos son de prueba).
+Plan para el ambiente productivo de cada cliente, sea en nuestros servidores o en los suyos. Todavía no está implementado: es la referencia para cuando entre el primer cliente. QA no se respalda (sus datos son de prueba).
 
 La idea es que ningún problema solo (un borrado por error, una base corrupta, un servidor caído, una cuenta comprometida, un ransomware o la caída de un proveedor) pueda llevarse todas las copias a la vez.
 

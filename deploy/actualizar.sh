@@ -2,7 +2,6 @@
 # Actualiza un ambiente a la última versión de su rama y reconstruye lo que cambió.
 #   producción: rama main, carpeta ~/formsis-v2
 #   QA:         rama qa,   carpeta ~/formsis-v2-qa
-#   dev:        rama dev,  carpeta ~/formsis-v2-dev
 # Cada carpeta sabe qué ambiente es por AMBIENTE en su .env (sin definir es producción).
 #
 # A mano:
@@ -22,9 +21,9 @@ principal() {
   local pedido=${1:-${SSH_ORIGINAL_COMMAND:-prod}}
   case "$pedido" in
     prod | actualizar) pedido=prod ;;
-    qa | dev) ;;
+    qa) ;;
     *)
-      echo "Ambiente desconocido: '$pedido'. Usa prod, qa o dev." >&2
+      echo "Ambiente desconocido: '$pedido'. Usa prod o qa." >&2
       exit 2
       ;;
   esac
@@ -64,7 +63,7 @@ principal() {
   local caddyfile_antes
   caddyfile_antes=$(sha256sum deploy/Caddyfile)
   git fetch --quiet origin "$rama"
-  # Deja los submódulos en el commit fijado antes del merge (QA y dev los mueven, ver abajo).
+  # Deja los submódulos en el commit fijado antes del merge (QA los mueve, ver abajo).
   git submodule update --init --recursive --quiet
   git merge --ff-only "origin/$rama"
   git submodule update --init --recursive
@@ -73,7 +72,7 @@ principal() {
     # Producción usa exactamente los commits de main fijados en el submódulo (lo probado en QA).
     actualizar_sitio
   else
-    # QA y dev siguen la punta de la rama del mismo nombre en cada submódulo (api, face), para
+    # QA sigue la punta de la rama del mismo nombre en cada submódulo (api, face), para
     # probar cambios del backend sin mover el puntero en este repo. Si el submódulo no tiene esa
     # rama, queda en el commit fijado.
     local sub

@@ -1,5 +1,5 @@
-# Deploy automático: cada push a main, qa o dev (por ejemplo al hacer merge de un PR) entra por SSH
-# al servidor y corre deploy/actualizar.sh para ese ambiente: main -> producción, qa -> QA, dev -> dev.
+# Deploy automático: cada push a main o qa (por ejemplo al hacer merge de un PR) entra por SSH
+# al servidor y corre deploy/actualizar.sh para ese ambiente: main -> producción, qa -> QA.
 # También se puede lanzar a mano desde la pestaña Actions eligiendo el ambiente.
 # Configuración (secretos del repositorio): ver "Deploy automático" en docs/despliegue-gcp.md
 # y docs/ambientes.md.
@@ -7,13 +7,13 @@ name: Deploy
 
 on:
   push:
-    branches: [main, qa, dev]
+    branches: [main, qa]
   workflow_dispatch:
     inputs:
       ambiente:
         description: Ambiente a actualizar
         type: choice
-        options: [prod, qa, dev]
+        options: [prod, qa]
         default: prod
 
 # Un deploy a la vez en el servidor (compilar dos ambientes juntos no entra en memoria);
@@ -48,7 +48,7 @@ jobs:
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/deploy ~/.ssh/known_hosts
           # En el servidor la llave solo puede correr deploy/actualizar.sh (ver la guía); lo que se
-          # manda como comando es el ambiente, que el script recibe y valida (prod, qa o dev).
+          # manda como comando es el ambiente, que el script recibe y valida (prod o qa).
           echo "Ambiente: $AMBIENTE"
           ssh -i ~/.ssh/deploy -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 \
             "$DEPLOY_USER@$DEPLOY_HOST" "$AMBIENTE"
