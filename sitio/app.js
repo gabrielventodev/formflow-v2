@@ -92,16 +92,16 @@
 
   // ---------- Juguete: arma un formulario y apruébalo ----------
   var CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
-  var BANDERA = '<svg class="bandera" viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#fff"/><rect y="10" width="30" height="10" fill="#d52b1e"/><rect width="10" height="10" fill="#0039a6"/><path d="M5 2.6l.9 2.7h2.8l-2.3 1.7.9 2.7L5 8l-2.3 1.7.9-2.7L1.3 5.3h2.8z" fill="#fff"/></svg>';
+  var BANDERA = '<svg class="bandera" viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#74acdf"/><rect y="6.67" width="30" height="6.67" fill="#fff"/><circle cx="15" cy="10" r="2" fill="#f6b40e"/></svg>';
   var PLANTILLAS = {
-    nombre: '<span class="etq">Nombre completo</span><div class="caja"><span class="escribe" data-texto="Camila Rojas Fuentes"></span></div>',
-    rut: '<span class="etq">RUT</span><div class="caja"><span class="escribe" data-texto="76.543.210-K"></span><span class="ok">' + CHECK + 'válido</span></div>',
-    telefono: '<span class="etq">Teléfono</span><div class="caja">' + BANDERA + '<span class="escribe" data-texto="+56 9 6123 4567"></span></div>',
+    nombre: '<span class="etq">Nombre completo</span><div class="caja"><span class="escribe" data-texto="Camila Fernández"></span></div>',
+    rut: '<span class="etq">DNI</span><div class="caja"><span class="escribe" data-texto="30.123.456"></span><span class="ok">' + CHECK + 'válido</span></div>',
+    telefono: '<span class="etq">Teléfono</span><div class="caja">' + BANDERA + '<span class="escribe" data-texto="+54 9 11 6123 4567"></span></div>',
     documento: '<span class="etq">Estatutos de la empresa</span><div class="caja"><div class="archivo"><span class="pdf">PDF</span><span>estatutos.pdf <small>· 2,4 MB</small></span><span class="carga"><i></i></span></div></div>',
     firma: '<span class="etq">Firma</span><div class="caja firma"><svg viewBox="0 0 300 56" aria-hidden="true"><path d="M10 40 C 22 10, 34 8, 38 30 S 52 52, 62 26 S 80 12, 84 34 C 88 46, 100 44, 108 30 C 114 20, 124 22, 128 34 C 132 42, 150 40, 170 28 M 150 44 C 190 40, 240 36, 290 30"/></svg></div>',
     vida: '<span class="etq">Prueba de vida</span><div class="caja"><span class="ovalo-mini"></span><span>Selfie en vivo</span><span class="ok">' + CHECK + 'persona real</span></div>'
   };
-  var NOMBRES = { nombre: "Nombre", rut: "RUT", telefono: "Teléfono", documento: "Documento", firma: "Firma", vida: "Prueba de vida" };
+  var NOMBRES = { nombre: "Nombre", rut: "DNI", telefono: "Teléfono", documento: "Documento", firma: "Firma", vida: "Prueba de vida" };
   var ficha = $("#ficha");
   if (ficha) {
     var lista = $("#campos"), vacio = $("#vacio"), enviar = $("#enviar"), estado = $("#estadoFicha");
