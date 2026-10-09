@@ -26,7 +26,8 @@
 	reverse_proxy web:3000
 }
 
-# Sitio de presentación (HTML estático de sitio/) en el dominio raíz, por defecto formsis.com.
+# Sitio de presentación (HTML estático del repo formsis-web, clonado en ../formsis-web)
+# en el dominio raíz, por defecto formsis.com.
 # Necesita en el DNS un registro A de @ (y de www) a la IP del servidor; mientras no exista,
 # Caddy solo reintenta el certificado de este dominio y la app sigue funcionando igual.
 {$DOMINIO_WEB} {

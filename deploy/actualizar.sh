@@ -9,6 +9,18 @@ caddyfile_antes=$(sha256sum deploy/Caddyfile)
 git fetch --quiet origin main
 git merge --ff-only origin/main
 git submodule update --init --recursive
+# Sitio de presentación (repo aparte), clonado al lado de este. Si falla no frena el deploy de la app.
+sitio=../formsis-web
+if [ -d "$sitio/.git" ]; then
+  { git -C "$sitio" fetch --quiet origin main && git -C "$sitio" merge --quiet --ff-only origin/main; } \
+    || echo "Aviso: no se pudo actualizar el sitio en $sitio" >&2
+else
+  git clone --quiet https://github.com/gabrielventodev/formsis-web.git "$sitio" \
+    || echo "Aviso: no se pudo clonar el sitio en $sitio" >&2
+fi
+# Que la carpeta exista y sea del usuario: si no, Docker la crearía como root al montarla
+# y el próximo clone fallaría.
+mkdir -p "$sitio"
 docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
 # Caddy lee el Caddyfile solo al arrancar, y git reemplaza el archivo en vez de editarlo,
 # así que el contenedor seguiría viendo el viejo: si cambió, se reinicia (un par de segundos).

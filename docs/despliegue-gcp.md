@@ -180,7 +180,7 @@ Para apagarlo, borra la línea `deploy-github` de `~/.ssh/authorized_keys` en la
 
 ## Sitio de presentación (formsis.com)
 
-La carpeta `sitio/` es la web pública de Formsis: HTML, CSS y JavaScript sin compilar (inicio interactivo, `/informacion`, `/terminos` y `/privacidad`). Caddy la sirve directo en el dominio `DOMINIO_WEB` (por defecto `formsis.com`) y redirige `www` a ese dominio; la app sigue en `DOMINIO`.
+La web pública de Formsis (inicio interactivo, `/informacion`, `/terminos` y `/privacidad`) vive en su propio repo, [gabrielventodev/formsis-web](https://github.com/gabrielventodev/formsis-web). `deploy/actualizar.sh` lo clona en `~/formsis-web` (al lado de este repo) y lo actualiza en cada deploy; Caddy lo sirve en el dominio `DOMINIO_WEB` (por defecto `formsis.com`) y redirige `www` a ese dominio. La app sigue en `DOMINIO`.
 
 Para que funcione, en Namecheap (Domain List → Manage → Advanced DNS) agrega dos registros apuntando a la IP fija del servidor:
 
@@ -191,7 +191,7 @@ Para que funcione, en Namecheap (Domain List → Manage → Advanced DNS) agrega
 
 Borra antes cualquier registro de `@` o `www` que ya exista (por ejemplo el "URL Redirect" o el "CNAME" de parking que Namecheap crea por defecto). Cuando el DNS propague, Caddy obtiene el certificado solo; si tarda, `docker compose -f docker-compose.prod.yml restart caddy`.
 
-Los cambios en `sitio/` se publican con el mismo deploy automático: basta un merge a `main`.
+Cada push a `main` de formsis-web se publica solo si ese repo tiene los mismos cuatro secretos `DEPLOY_*` de la sección anterior (Settings → Secrets and variables → Actions). Sin ellos, el sitio se actualiza en el próximo deploy de este repo.
 
 ## Operación del día a día
 
