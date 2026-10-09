@@ -51,7 +51,7 @@ Requisitos: Go 1.26+, Node 22+, Docker.
 
 ### Ambiente de prueba en internet
 
-Para subirlo a un servidor con https (por ejemplo una VM de Google Cloud) usa `docker-compose.prod.yml` y sigue la guía [docs/despliegue-gcp.md](docs/despliegue-gcp.md).
+Para subirlo a un servidor con https (por ejemplo una VM de Google Cloud) usa `docker-compose.prod.yml` y sigue la guía [docs/despliegue-gcp.md](docs/despliegue-gcp.md). Producción, QA y dev en el mismo servidor: [docs/ambientes.md](docs/ambientes.md). Plan de respaldos: [docs/backups.md](docs/backups.md).
 
 ### Desde VS Code
 
