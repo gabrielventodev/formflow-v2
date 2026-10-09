@@ -539,3 +539,4 @@ details p { margin: 10px 0 0; }
 }
 @media (max-width: 860px) { .paso { opacity: 1; } }
 .error .bajada { margin-inline: auto; } .error .hero-cta { justify-content: center; }
+.vacio[hidden] { display: none; }
