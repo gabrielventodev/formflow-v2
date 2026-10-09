@@ -176,7 +176,9 @@ rm ~/deploy_github ~/deploy_github.pub
 
 Para apagarlo, borra la línea `deploy-github` de `~/.ssh/authorized_keys` en la máquina, o desactiva el workflow en **Actions → Deploy → ⋯ → Disable workflow**.
 
-**Ojo con el backend:** un merge en `formsis-backend` no despliega nada por sí solo. Se despliega cuando `formsis-v2` actualiza el submódulo `api` y ese cambio llega a `main`.
+**Ojo con el backend:** un merge en `formsis-backend` `main` no despliega producción por sí solo. Se despliega cuando `formsis-v2` actualiza el submódulo `api` y ese cambio llega a `main`.
+
+**Ambiente de QA:** los pushes a la rama `qa` despliegan QA en `qa.formsis.com`, solo accesible desde las IPs permitidas. Cómo crearlos y cómo funcionan: [ambientes.md](ambientes.md).
 
 ## Sitio de presentación (formsis.com)
 

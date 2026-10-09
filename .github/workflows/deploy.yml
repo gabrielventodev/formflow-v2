@@ -1,14 +1,23 @@
-# Deploy automático: cada push a main (por ejemplo al hacer merge de un PR) entra por SSH
-# al servidor y corre deploy/actualizar.sh. También se puede lanzar a mano desde la pestaña Actions.
-# Configuración (secretos del repositorio): ver "Deploy automático" en docs/despliegue-gcp.md.
+# Deploy automático: cada push a main o qa (por ejemplo al hacer merge de un PR) entra por SSH
+# al servidor y corre deploy/actualizar.sh para ese ambiente: main -> producción, qa -> QA.
+# También se puede lanzar a mano desde la pestaña Actions eligiendo el ambiente.
+# Configuración (secretos del repositorio): ver "Deploy automático" en docs/despliegue-gcp.md
+# y docs/ambientes.md.
 name: Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, qa]
   workflow_dispatch:
+    inputs:
+      ambiente:
+        description: Ambiente a actualizar
+        type: choice
+        options: [prod, qa]
+        default: prod
 
-# Un deploy a la vez; si llegan dos merges seguidos, el segundo espera al primero.
+# Un deploy a la vez en el servidor (compilar dos ambientes juntos no entra en memoria);
+# si llegan dos merges seguidos, el segundo espera al primero.
 concurrency:
   group: deploy
   cancel-in-progress: false
@@ -27,6 +36,7 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          AMBIENTE: ${{ inputs.ambiente || (github.ref_name == 'main' && 'prod') || github.ref_name }}
         run: |
           if [ -z "$DEPLOY_HOST" ] || [ -z "$DEPLOY_USER" ] || [ -z "$DEPLOY_SSH_KEY" ] || [ -z "$DEPLOY_KNOWN_HOSTS" ]; then
             # Sin configurar no es un error: el deploy queda apagado hasta crear los secretos.
@@ -37,7 +47,8 @@ jobs:
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/deploy ~/.ssh/known_hosts
-          # En el servidor la llave solo puede correr deploy/actualizar.sh (ver la guía),
-          # así que el comando que se mande aquí da igual.
+          # En el servidor la llave solo puede correr deploy/actualizar.sh (ver la guía); lo que se
+          # manda como comando es el ambiente, que el script recibe y valida (prod o qa).
+          echo "Ambiente: $AMBIENTE"
           ssh -i ~/.ssh/deploy -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 \
-            "$DEPLOY_USER@$DEPLOY_HOST" actualizar
+            "$DEPLOY_USER@$DEPLOY_HOST" "$AMBIENTE"
