@@ -7,6 +7,7 @@
 # A mano:
 #   ~/formsis-v2/deploy/actualizar.sh          # producción
 #   ~/formsis-v2/deploy/actualizar.sh qa       # QA (corre el script de ~/formsis-v2-qa)
+#   ~/formsis-v2-qa/deploy/actualizar.sh       # QA (sin argumento, el ambiente de su carpeta)
 # El deploy automático (.github/workflows/deploy.yml) entra por SSH con una llave que solo puede
 # correr este script en ~/formsis-v2, y manda el ambiente como comando (llega en SSH_ORIGINAL_COMMAND).
 # Guía: docs/ambientes.md
@@ -17,8 +18,13 @@ set -euo pipefail
 principal() {
   cd "$(dirname "$0")/.."
 
+  local propio
+  propio=$(sed -n 's/^AMBIENTE=//p' .env 2>/dev/null | tail -n 1 | tr -d "\"' \r")
+  propio=${propio:-prod}
+
+  # Sin argumento ni comando SSH se actualiza el ambiente de esta carpeta.
   # "actualizar" es lo que mandaban los workflows antes de que hubiera ambientes: producción.
-  local pedido=${1:-${SSH_ORIGINAL_COMMAND:-prod}}
+  local pedido=${1:-${SSH_ORIGINAL_COMMAND:-$propio}}
   case "$pedido" in
     prod | actualizar) pedido=prod ;;
     qa) ;;
@@ -27,10 +33,6 @@ principal() {
       exit 2
       ;;
   esac
-
-  local propio
-  propio=$(sed -n 's/^AMBIENTE=//p' .env 2>/dev/null | tail -n 1 | tr -d "\"' \r")
-  propio=${propio:-prod}
 
   # Si se pidió otro ambiente, se corre el script de la carpeta de ese ambiente (al lado de esta).
   if [ "$pedido" != "$propio" ]; then
