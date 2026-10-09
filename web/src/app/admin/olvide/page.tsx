@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
           </button>
         </form>
       )}
-      <p className="mt-6 text-center text-sm text-slate-600">
+      <p className="mt-6 text-center text-sm text-zinc-600">
         <Link href="/admin/login" className={authLink}>Volver a iniciar sesión</Link>
       </p>
     </AuthCard>

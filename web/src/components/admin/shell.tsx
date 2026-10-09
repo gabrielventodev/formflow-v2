@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { adminFetch, canManage, ROLE_LABEL, type Me, type Role } from "@/lib/admin";
+import { FormsisLogo } from "@/components/brand/logo";
 
 const MeContext = createContext<Me | null>(null);
 
@@ -71,7 +72,9 @@ function Authenticated({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen flex-col bg-zinc-50 text-zinc-900">
         <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white md:static">
           <div className="flex h-14 items-center gap-6 px-4 sm:px-6">
-            <Link href="/admin" className="font-semibold">Formsis</Link>
+            <Link href="/admin" className="shrink-0" title="Ir a envíos">
+              <FormsisLogo className="h-7 w-auto" />
+            </Link>
             <nav className="hidden gap-1 overflow-x-auto text-sm md:flex">
               {nav.map((n) => (
                 <Link

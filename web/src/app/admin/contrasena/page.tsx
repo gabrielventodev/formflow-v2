@@ -50,7 +50,7 @@ function SetPassword() {
     return (
       <AuthCard title="Enlace no válido">
         <AuthAlert>{invalid}</AuthAlert>
-        <p className="mt-6 text-center text-sm text-slate-600">
+        <p className="mt-6 text-center text-sm text-zinc-600">
           <Link href="/admin/olvide" className={authLink}>Pedir un enlace nuevo</Link>
         </p>
       </AuthCard>
@@ -95,12 +95,12 @@ function SetPassword() {
                 onClick={() => setShow((v) => !v)}
                 aria-label={show ? "Ocultar contraseña" : "Mostrar contraseña"}
                 aria-pressed={show}
-                className="absolute right-1.5 top-1 grid size-10 cursor-pointer place-items-center rounded-lg text-slate-600 hover:bg-slate-100"
+                className="absolute right-1.5 top-1 grid size-10 cursor-pointer place-items-center rounded-lg text-zinc-600 hover:bg-zinc-100"
               >
                 {show ? <EyeOff className="size-[18px]" aria-hidden /> : <Eye className="size-[18px]" aria-hidden />}
               </button>
             </div>
-            <p id="password-hint" className="mt-1.5 text-xs text-slate-600">Mínimo {MIN} caracteres.</p>
+            <p id="password-hint" className="mt-1.5 text-xs text-zinc-600">Mínimo {MIN} caracteres.</p>
           </div>
           <div>
             <label htmlFor="confirm" className={authLabel}>Repite la contraseña</label>

@@ -15,12 +15,12 @@ function contrastWithWhite(hex: string): number {
   return 1.05 / (l + 0.05);
 }
 
-const PRESETS = ["#18181b", "#1d4ed8", "#0f766e", "#15803d", "#b91c1c", "#7c3aed", "#c2410c", "#0e7490"];
+const PRESETS = ["#0f1c2e", "#1d4ed8", "#0f766e", "#15803d", "#b91c1c", "#7c3aed", "#c2410c", "#0e7490"];
 
 export default function BrandingPage() {
   const [saved, setSaved] = useState<Branding | null>(null);
   const [name, setName] = useState("");
-  const [color, setColor] = useState("#18181b");
+  const [color, setColor] = useState("#0f1c2e");
   const [support, setSupport] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");

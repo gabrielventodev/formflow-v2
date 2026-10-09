@@ -17,7 +17,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { adminFetch, ApiError } from "@/lib/admin";
-import { Backdrop, jakarta, Logo } from "@/components/admin/auth-layout";
+import { Backdrop, Logo } from "@/components/admin/auth-layout";
 
 const HIGHLIGHTS = [
   { icon: Inbox, title: "Bandeja de envíos", text: "Cada solicitud con sus datos y documentos en un solo lugar." },
@@ -29,10 +29,10 @@ function Intro() {
   return (
     <section className="hidden max-w-md lg:block">
       <Logo />
-      <h2 className="mt-12 text-4xl font-bold leading-[1.15] tracking-tight text-balance text-slate-900">
+      <h2 className="mt-12 text-4xl font-bold leading-[1.15] tracking-tight text-balance text-zinc-900">
         Aprueba nuevos clientes sin perseguir correos ni archivos sueltos.
       </h2>
-      <p className="mt-4 text-base leading-relaxed text-slate-600">
+      <p className="mt-4 text-base leading-relaxed text-zinc-600">
         El panel donde tu equipo revisa, observa y aprueba cada solicitud de preonboarding.
       </p>
       <ul className="mt-10 space-y-3">
@@ -41,12 +41,12 @@ function Intro() {
             key={title}
             className="flex gap-4 rounded-2xl border border-white/60 bg-white/40 p-4 shadow-sm backdrop-blur-md"
           >
-            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-blue-600/10 text-blue-700">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-sello/15 text-sello-prof">
               <Icon className="size-5" aria-hidden />
             </span>
             <div>
-              <p className="font-semibold text-slate-900">{title}</p>
-              <p className="mt-0.5 text-sm leading-relaxed text-slate-600">{text}</p>
+              <p className="font-semibold text-zinc-900">{title}</p>
+              <p className="mt-0.5 text-sm leading-relaxed text-zinc-600">{text}</p>
             </div>
           </li>
         ))}
@@ -92,22 +92,22 @@ function LoginForm() {
   }
 
   const fieldBox =
-    "flex h-12 items-center gap-2.5 rounded-xl border bg-white/80 px-3.5 transition-[border-color,box-shadow] duration-200 focus-within:border-blue-600 focus-within:ring-4 focus-within:ring-blue-600/15";
-  const fieldBorder = error ? "border-red-400" : "border-slate-300 hover:border-slate-400";
-  const inputCls = "h-full w-full bg-transparent text-base text-slate-900 outline-none placeholder:text-slate-500";
+    "flex h-12 items-center gap-2.5 rounded-xl border bg-white/80 px-3.5 transition-[border-color,box-shadow] duration-200 focus-within:border-sello-prof focus-within:ring-4 focus-within:ring-sello/25";
+  const fieldBorder = error ? "border-red-400" : "border-zinc-300 hover:border-zinc-400";
+  const inputCls = "h-full w-full bg-transparent text-base text-zinc-900 outline-none placeholder:text-zinc-500";
 
   return (
     <form
       onSubmit={onSubmit}
       aria-busy={pending}
-      className="w-full max-w-[420px] rounded-3xl border border-white/70 bg-white/65 p-7 shadow-xl shadow-slate-900/10 backdrop-blur-xl motion-safe:animate-[ff-rise_350ms_ease-out] sm:p-9"
+      className="w-full max-w-[420px] rounded-3xl border border-white/70 bg-white/65 p-7 shadow-xl shadow-zinc-900/10 backdrop-blur-xl motion-safe:animate-[ff-rise_350ms_ease-out] sm:p-9"
     >
       <div className="mb-8 lg:hidden">
         <Logo />
       </div>
 
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900">Inicia sesión</h1>
-      <p className="mt-1.5 text-sm leading-relaxed text-slate-600">Ingresa al panel de revisión con tu cuenta de equipo.</p>
+      <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Inicia sesión</h1>
+      <p className="mt-1.5 text-sm leading-relaxed text-zinc-600">Ingresa al panel de revisión con tu cuenta de equipo.</p>
 
       {error && (
         <div
@@ -123,11 +123,11 @@ function LoginForm() {
 
       <div className="mt-7 space-y-5">
         <div>
-          <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-slate-800">
+          <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-zinc-800">
             Correo electrónico
           </label>
           <div className={`${fieldBox} ${fieldBorder}`}>
-            <Mail className="size-[18px] shrink-0 text-slate-500" aria-hidden />
+            <Mail className="size-[18px] shrink-0 text-zinc-500" aria-hidden />
             <input
               id="email"
               name="email"
@@ -145,11 +145,11 @@ function LoginForm() {
         </div>
 
         <div>
-          <label htmlFor="password" className="mb-1.5 block text-sm font-semibold text-slate-800">
+          <label htmlFor="password" className="mb-1.5 block text-sm font-semibold text-zinc-800">
             Contraseña
           </label>
           <div className={`${fieldBox} ${fieldBorder} pr-1.5`}>
-            <Lock className="size-[18px] shrink-0 text-slate-500" aria-hidden />
+            <Lock className="size-[18px] shrink-0 text-zinc-500" aria-hidden />
             <input
               id="password"
               name="password"
@@ -168,7 +168,7 @@ function LoginForm() {
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
               aria-pressed={showPassword}
-              className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-lg text-slate-600 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-blue-600"
+              className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-lg text-zinc-600 transition-colors duration-150 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-sello-prof"
             >
               {showPassword ? <EyeOff className="size-[18px]" aria-hidden /> : <Eye className="size-[18px]" aria-hidden />}
             </button>
@@ -184,7 +184,7 @@ function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="group mt-8 inline-flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-base font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors duration-200 hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-wait disabled:opacity-75"
+        className="group mt-8 inline-flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-tinta px-4 text-base font-semibold text-white shadow-lg shadow-tinta/20 transition-colors duration-200 hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sello-prof disabled:cursor-wait disabled:opacity-75"
       >
         {pending ? (
           <>
@@ -195,21 +195,21 @@ function LoginForm() {
           <>
             Ingresar
             <ArrowRight
-              className="size-[18px] transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none"
+              className="size-[18px] transition-transform duration-200 group-hover:tranzinc-x-0.5 motion-reduce:transition-none"
               aria-hidden
             />
           </>
         )}
       </button>
 
-      <p className="mt-6 text-center text-sm leading-relaxed text-slate-600">
-        <Link href="/admin/olvide" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
+      <p className="mt-6 text-center text-sm leading-relaxed text-zinc-600">
+        <Link href="/admin/olvide" className="font-semibold text-sello-prof underline-offset-4 hover:underline">
           ¿Olvidaste tu contraseña?
         </Link>
       </p>
 
-      <p className="mt-6 flex items-center justify-center gap-1.5 border-t border-slate-200/80 pt-5 text-xs text-slate-600">
-        <ShieldCheck className="size-4 text-blue-700" aria-hidden />
+      <p className="mt-6 flex items-center justify-center gap-1.5 border-t border-zinc-200/80 pt-5 text-xs text-zinc-600">
+        <ShieldCheck className="size-4 text-sello-prof" aria-hidden />
         Acceso exclusivo para el equipo de tu organización.
       </p>
     </form>
@@ -218,7 +218,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className={`${jakarta.className} relative isolate flex min-h-screen items-center overflow-hidden bg-slate-50 text-slate-900`}>
+    <main className="relative isolate flex min-h-screen items-center overflow-hidden bg-zinc-50 text-zinc-900">
       <Backdrop />
       <div className="relative mx-auto grid w-full max-w-6xl items-center gap-16 px-4 py-10 sm:px-8 lg:grid-cols-[1fr_auto] lg:px-12">
         <Intro />
