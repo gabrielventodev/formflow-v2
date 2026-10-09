@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getBranding } from "@/lib/branding";
+import { FormsisMark } from "@/components/brand/logo";
 
 // Magic-link URLs carry the applicant's access token: never leak it through the Referer header.
 export const metadata: Metadata = {
@@ -37,6 +38,10 @@ export default async function PortalLayout({ children }: { children: React.React
             </a>
           </p>
         )}
+        <p className="flex items-center justify-center gap-1.5 pt-2">
+          <FormsisMark className="size-3.5" />
+          Con tecnología de Formsis
+        </p>
       </footer>
     </div>
   );

@@ -2,14 +2,36 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0f1c2e;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-schibsted), var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+/* Formsis palette (see branding/ in the project files). The neutral zinc scale is retinted toward
+   Tinta so every existing zinc-* class follows the brand: zinc-900 is Tinta, zinc-200 Niebla,
+   zinc-50 Papel, zinc-600 Pizarra. Sello is only for graphics (2.3:1 on white); text and buttons
+   in green use sello-prof. */
+@theme {
+  --color-zinc-50: #f4f6f7;
+  --color-zinc-100: #ebeff2;
+  --color-zinc-200: #dde3e8;
+  --color-zinc-300: #c5ced6;
+  --color-zinc-400: #94a0ad;
+  --color-zinc-500: #616e7e;
+  --color-zinc-600: #4f5d6e;
+  --color-zinc-700: #36455a;
+  --color-zinc-800: #1e2c40;
+  --color-zinc-900: #0f1c2e;
+  --color-zinc-950: #091320;
+  --color-tinta: #0f1c2e;
+  --color-sello: #22c17f;
+  --color-sello-prof: #0b7a50;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,13 +44,19 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+h1,
+h2 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
 }
 
 /* Admin panel primitives */
 @layer components {
   .input {
-    @apply rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200;
+    @apply rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-sello-prof focus:ring-2 focus:ring-sello/25;
   }
   .btn {
     @apply inline-flex items-center justify-center gap-1.5 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium hover:bg-zinc-50 disabled:opacity-50;

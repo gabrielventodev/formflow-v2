@@ -13,12 +13,13 @@ export const STATUS_LABEL: Record<Status, string> = {
 };
 
 export const STATUS_STYLE: Record<Status, string> = {
+  // Formsis status colors (brand guide). Only "approved" uses the brand green.
   draft: "bg-zinc-100 text-zinc-600",
-  submitted: "bg-sky-100 text-sky-800",
-  in_review: "bg-violet-100 text-violet-800",
-  changes_requested: "bg-amber-100 text-amber-800",
-  approved: "bg-emerald-100 text-emerald-800",
-  rejected: "bg-rose-100 text-rose-800",
+  submitted: "bg-[#e7eefd] text-[#1f4fd1]",
+  in_review: "bg-[#fdf1dc] text-[#8a5300]",
+  changes_requested: "bg-[#fdf1dc] text-[#8a5300]",
+  approved: "bg-[#e3f6ec] text-[#0e7c52]",
+  rejected: "bg-[#fce8e6] text-[#b3362e]",
 };
 
 export type Role = "owner" | "admin" | "reviewer";
